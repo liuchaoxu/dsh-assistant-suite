@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+const root = dirname(dirname(fileURLToPath(import.meta.url)))
+const read = (file) => readFileSync(join(root, file), 'utf8')
+const pkg = JSON.parse(read('package.json')), patch = read('cordis.patch.yml')
+const client = read('lib/client.js'), host = read('lib/index.js')
+assert.equal(pkg.name, 'dsh-assistant-suite')
+assert.equal(pkg.dsh?.manifestVersion, 1)
+assert.equal(pkg.dsh?.client?.platform, 'web')
+assert.equal(pkg.dsh?.client?.immediately, true)
+assert.ok(pkg.dsh.client.inject.includes('@deepseek-ai/dsh-client-connection'))
+assert.ok(pkg.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-conversation'))
+assert.ok(pkg.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-settings'))
+assert.match(patch, /id:\s*assistant-suite/)
+assert.match(patch, /name:\s*['"]dsh-assistant-suite['"]?/)
+assert.match(client, /id:\s*["']dsh-assistant-suite["']/)
+assert.match(client, /const modelUsage =/)
+assert.match(client, /const reminding =/)
+assert.match(host, /applyModelUsage\(ctx\)/)
+assert.match(host, /applyReminding\(ctx\)/)
+for (const file of ['lib/model-usage.js','lib/reminding.js','lib/model-usage.client.js','lib/reminding.client.js','lib/client.js','locale/zh.json','locale/en.json','icon.svg']) read(file)
+assert.equal(JSON.parse(read('locale/zh.json')).meta.title, 'DSH 助手套件')
+assert.equal(JSON.parse(read('locale/en.json')).meta.title, 'DSH Assistant Suite')
+console.log('Package check passed: one row and both feature modules present.')

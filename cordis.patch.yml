@@ -1,0 +1,4 @@
+- insert:
+    - id: assistant-suite
+      name: 'dsh-assistant-suite'
+      config: {}
