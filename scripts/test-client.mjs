@@ -7,16 +7,32 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const source = readFileSync(join(root, 'lib/client.js'), 'utf8')
 let definition
 const window = { __ModuleLoader__: { load(value) { definition = value } } }
+const keyListeners = []
+let restoredFocus = 0
+const document = {
+  body: {},
+  activeElement: { focus() { restoredFocus += 1 } },
+  addEventListener(name, listener) { if (name === 'keydown') keyListeners.push(listener) },
+  removeEventListener(name, listener) {
+    if (name === 'keydown') keyListeners.splice(keyListeners.indexOf(listener), 1)
+  },
+}
+window.setTimeout = () => 1
+window.clearTimeout = () => {}
 const localStorage = { getItem() { return null }, setItem() {}, removeItem() {}, key() { return null }, length: 0 }
 const React = {
   Fragment: Symbol('Fragment'),
   createElement(type, props, ...children) { return { type, props: props ?? {}, children } },
   useState(initial) { return [typeof initial === 'function' ? initial() : initial, () => {}] },
+  useRef(value) { return { current: value } },
+  useCallback(callback) { return callback },
+  useEffect() {},
 }
-runInNewContext(source, { window, localStorage })
+runInNewContext(source, { window, localStorage, document })
 assert.equal(definition.id, 'dsh-assistant-suite')
 const plugin = definition.factory((name) => {
   if (name === 'react') return React
+  if (name === 'react-dom') return { createPortal: (children, container) => ({ type: 'portal', props: { container }, children: [children] }) }
   throw new Error('Unexpected module request: ' + name)
 })
 assert.equal(typeof plugin.apply, 'function')
@@ -50,6 +66,53 @@ assert.equal(registrations[2].options.order, 30)
 assert.equal(registrations[2].options.label(), '助手套件')
 assert.equal(registrations[2].options.children['assistant-suite.usage-settings'].kind, 'single')
 assert.equal(typeof registrations[2].component, 'function')
+
+// The manual refresh action belongs beside the timestamp and retains its
+// accessible name when rendered without visible text.
+const usageTree = registrations[1].component({ t: (key) => key })
+const statusEntry = visit(usageTree).find((node) => node.type.name === 'RefreshStatus')
+assert.equal(statusEntry.props.showRefresh, true)
+let refreshCalls = 0
+const statusProps = { ...statusEntry.props, onRefresh() { refreshCalls += 1 } }
+const statusTree = statusEntry.type(statusProps)
+const statusLine = visit(statusTree).find((node) => node.props.className === 'dsh-usage-status')
+const refreshEntry = statusLine.children.find((node) => node?.props?.className === 'dsh-usage-status-refresh')
+const refreshButton = refreshEntry.type({ ...refreshEntry.props, children: refreshEntry.children })
+assert.equal(refreshButton.type, 'button')
+assert.equal(refreshButton.props['aria-label'], 'action.refresh')
+assert.equal(refreshButton.props.title, 'action.refresh')
+assert.equal(refreshButton.props.disabled, false)
+assert.equal(refreshEntry.children[0].type, 'svg')
+refreshButton.props.onClick()
+assert.equal(refreshCalls, 1)
+const pendingStatus = statusEntry.type({ ...statusProps, view: { ...statusProps.view, refreshing: true } })
+const pendingRefresh = visit(pendingStatus).find((node) => node.props.className === 'dsh-usage-status-refresh')
+assert.equal(pendingRefresh.props.disabled, true)
+const hiddenRefresh = statusEntry.type({ ...statusProps, showRefresh: false })
+assert.equal(visit(hiddenRefresh).some((node) => node.props.className === 'dsh-usage-status-refresh'), false)
+
+// Opening history over usage must escape the parent's clipping and only close
+// the top dialog on Escape; closing it restores focus in the underlying view.
+const modalEntry = visit(usageTree).find((node) => node.type.name === 'UsageModal')
+const modalCleanups = []
+React.useEffect = (effect) => { const cleanup = effect(); if (cleanup) modalCleanups.push(cleanup) }
+let usageCloses = 0, historyCloses = 0
+const usageModal = modalEntry.type({ open: true, title: 'usage', onClose() { usageCloses += 1 } })
+const historyModal = modalEntry.type({ open: true, title: 'history', onClose() { historyCloses += 1 } })
+assert.equal(usageModal.type, 'portal')
+assert.equal(historyModal.type, 'portal')
+assert.equal(historyModal.props.container, document.body)
+const escapeKey = { key: 'Escape', preventDefault() {}, stopPropagation() {} }
+keyListeners.slice().forEach(listener => listener(escapeKey))
+assert.equal(historyCloses, 1)
+assert.equal(usageCloses, 0)
+modalCleanups.pop()()
+assert.equal(restoredFocus, 1)
+keyListeners.slice().forEach(listener => listener(escapeKey))
+assert.equal(usageCloses, 1)
+modalCleanups.pop()()
+assert.equal(keyListeners.length, 0)
+React.useEffect = () => {}
 assert.match(source, /dsh-model-usage/)
 assert.match(source, /dsh-reminding/)
 console.log('Client test passed: usage control and reminder settings mount together.')

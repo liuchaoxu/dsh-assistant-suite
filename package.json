@@ -1,10 +1,104 @@
 {
-  "name":"dsh-assistant-suite","version":"0.1.0","private":true,
-  "description":"A combined DeepSeek Harness plugin for provider usage and system reminders.",
-  "license":"MIT","author":"liuchaoxu <ischaoxu@163.com>","type":"module","main":"lib/index.js",
-  "exports":{".":"./lib/index.js","./client":"./lib/client.js","./cordis.patch.yml":"./cordis.patch.yml","./locale/*.json":"./locale/*.json","./icon":"./icon.svg","./package.json":"./package.json"},
-  "files":["lib/index.js","lib/model-usage.js","lib/reminding.js","lib/client.js","cordis.patch.yml","locale/*.json","icon.svg","README.md","CHANGELOG.md","LICENSE"],
-  "engines":{"node":">=18","dsh":">=0.2.1-rc.2"},
-  "scripts":{"build:client":"node scripts/build-client.mjs","check":"node scripts/check.mjs","test":"node scripts/build-client.mjs && node scripts/check.mjs && node scripts/test-host.mjs && node scripts/test-client.mjs"},
-  "dsh":{"manifestVersion":1,"bundle":{"patch":"./cordis.patch.yml"},"compatibility":{"dshReleases":{"0.2.1-rc.2":"compatible","0.2.1-rc.5":"compatible"}},"client":{"platform":"web","immediately":true,"inject":["@deepseek-ai/dsh-client-connection","@deepseek-ai/dsh-client-locale","@deepseek-ai/dsh-client-ui-conversation","@deepseek-ai/dsh-client-ui-settings"]}}
+  "name": "dsh-assistant-suite",
+  "version": "0.1.1",
+  "description": "DeepSeek Harness assistant suite: provider balances, quota windows and spending history with system notifications for approvals, questions and completed turns.",
+  "license": "MIT",
+  "author": "liuchaoxu <ischaoxu@163.com>",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/model-usage.js",
+    "lib/reminding.js",
+    "lib/client.js",
+    "lib/model-usage.client.js",
+    "lib/reminding.client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "docs/screenshots/",
+    "scripts/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18",
+    "dsh": ">=0.2.1-rc.2"
+  },
+  "scripts": {
+    "build:client": "node scripts/build-client.mjs",
+    "check": "node scripts/check.mjs",
+    "test:host": "node scripts/test-host.mjs",
+    "test:client": "node scripts/test-client.mjs",
+    "test": "npm run build:client && npm run check && npm run test:host && npm run test:client",
+    "verify": "npm test && npm run pack:check",
+    "pack:check": "npm pack --dry-run",
+    "prepack": "npm run build:client && npm run check",
+    "prepublishOnly": "npm test"
+  },
+  "dsh": {
+    "manifestVersion": 1,
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "compatibility": {
+      "dshReleases": {
+        "0.2.1-rc.2": "compatible",
+        "0.2.1-rc.5": "compatible"
+      }
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/liuchaoxu/dsh-assistant-suite.git"
+  },
+  "homepage": "https://github.com/liuchaoxu/dsh-assistant-suite#readme",
+  "bugs": {
+    "url": "https://github.com/liuchaoxu/dsh-assistant-suite/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek",
+    "deepseek-harness",
+    "cordis",
+    "cordis-plugin",
+    "assistant",
+    "llm",
+    "usage",
+    "quota",
+    "billing",
+    "balance",
+    "spending-history",
+    "notification",
+    "reminder",
+    "commandcode",
+    "openrouter",
+    "moonshot",
+    "siliconflow",
+    "new-api"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }
