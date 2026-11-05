@@ -20,6 +20,7 @@ const output = [
   '    const reminding = ((require) => {' + reminders + NL + '    })(require);',
   '    exports.apply = (ctx) => { modelUsage.apply(ctx); reminding.apply(ctx); };',
   '    exports.inject = [...new Set([...modelUsage.inject, ...reminding.inject])];',
+  '    exports.__test = modelUsage.__test;',
   '    return module.exports;', '  },', '});', '',
 ].join(NL)
 writeFileSync(join(root, 'lib/client.js'), output)

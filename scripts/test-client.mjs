@@ -37,6 +37,28 @@ const plugin = definition.factory((name) => {
 })
 assert.equal(typeof plugin.apply, 'function')
 assert.deepEqual(Array.from(plugin.inject), ['slots'])
+
+// A cc-switch object literal (function extractor, computed URL) converts to the
+// stored JSON shape, while plain JSON stays untouched.
+const ccSwitchSample = String.raw`({
+  request: {
+    url: "{{baseUrl}}".replace(/\/+$/, "").replace(/\/v1$/, "") + "/v1/usage",
+    method: "GET",
+    headers: { Authorization: "Bearer {{apiKey}}" }
+  },
+  extractor: function(response) {
+    const remaining = response?.remaining ?? response?.balance;
+    return { isValid: response?.is_active ?? true, remaining, unit: "USD" };
+  }
+})`
+const converted = plugin.__test.convertCcSwitchTemplate(ccSwitchSample)
+assert.equal(converted.request.url, '{{baseUrlRoot}}/v1/usage')
+assert.equal(converted.request.method, 'GET')
+assert.equal(converted.request.headers.Authorization, 'Bearer {{apiKey}}')
+assert.equal(typeof converted.extractor, 'string')
+assert.match(converted.extractor, /remaining/)
+assert.equal(plugin.__test.parseTemplateDraft(ccSwitchSample).converted, true)
+assert.equal(plugin.__test.parseTemplateDraft('{"request":{"url":"{{baseUrl}}/usage"}}').converted, false)
 const registrations = []
 const ctx = {
   get() { return undefined },
@@ -148,6 +170,8 @@ assert.match(source, /ledger\.title/)
 assert.match(source, /ledger\.priceTitle/)
 assert.match(source, /DEEPSEEK_REFERENCE_PRICE/)
 assert.match(source, /function priceEntry/)
+assert.match(source, /function pickBalanceInfos/)
+assert.match(source, /data\.mode === "deepseek"\) card = React\.createElement\(DeepSeekCard/)
 for (const preset of ['commandcode', 'newapi', 'openrouter', 'moonshot', 'siliconflow', 'deepseek', 'generic']) {
   assert.match(source, new RegExp(`preset\\.${preset}`))
 }

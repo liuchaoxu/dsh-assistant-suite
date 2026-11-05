@@ -95,7 +95,7 @@ dsh plugin --profile <profile> add link:/absolute/path/to/dsh-assistant-suite
 
 1. 先在 **设置 → 模型** 里填好该供应商的 API Key；模板用的是该路由的凭据引用，设置页会显示它的名字。
 2. 在 **第三方用量模板** 里展开对应供应商，点 **设置模板**。可以从「从预设开始」里选 Command Code、One API / New API、OpenRouter、Moonshot / Kimi、SiliconFlow、DeepSeek 官方或通用空模板；也可以点 **用内置适配初始化**，把插件当前使用的接口和字段直接生成成模板，再按实际返回修改。
-3. 编辑 JSON。编辑器会实时显示 **请求预览**（解析后的 URL，密钥显示为 `***`），并检查 JSON、同源、方法和占位符。
+3. 编辑 JSON。编辑器会实时显示 **请求预览**（解析后的 URL，密钥显示为 `***`），并检查 JSON、同源、方法和占位符。也可以直接粘贴 cc-switch 的 `{ request, extractor }` 写法（含 `function` 和 `.replace(...)` 拼接的 URL），粘贴时会自动转换。
 4. 点 **测试模板**：用当前草稿真实请求一次，成功时列出将要显示的字段，失败时给出宿主原始报错（HTTP 状态、同源限制、提取失败等）。测试不会保存。
 5. 点 **保存模板**，回到用量面板刷新即可看到结果；移除模板会退回内置适配。
 

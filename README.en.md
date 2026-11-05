@@ -82,7 +82,7 @@ A service outside the built-in adapters can describe its usage endpoint with a t
 
 1. Store the provider's API key in **Settings → Models**; the template uses that route's credential reference, shown in the settings page.
 2. Expand the provider under **Custom usage templates** and click **Set template**. Start from a preset (Command Code, One API / New API, OpenRouter, Moonshot / Kimi, SiliconFlow, DeepSeek official, or the generic blank template), or click **Initialize from the built-in adapter** to turn the endpoint and fields this plugin already uses into an editable template.
-3. Edit the JSON. The editor previews the resolved request URL live (the key is masked as `***`) and checks JSON validity, same-origin rules, the method, and placeholders.
+3. Edit the JSON. The editor previews the resolved request URL live (the key is masked as `***`) and checks JSON validity, same-origin rules, the method, and placeholders. You can also paste a cc-switch `{ request, extractor }` object literal (including a `function` extractor and a `.replace(...)`-built URL); it is converted on paste.
 4. Click **Test template**: the draft is sent for real. Success lists the fields the panel would show; failure shows the host's own error (HTTP status, origin rule, extraction failure). Testing never saves.
 5. Click **Save template**, then refresh the usage panel. Removing a template falls back to the built-in adapter.
 

@@ -3,6 +3,9 @@
 ## Unreleased
 - Add a host-side session usage ledger: `assistant/message` usage (input, output, cache read, total tokens and requests) is folded per day/provider/model into `$DSH_HOME/assistant-suite/usage-ledger.json`, with duplicate sequence numbers ignored.
 - Add a **Tokens and cost** card to the usage panel showing the last 30 days, per-model rows, and a structured price editor keyed by provider/model: three fields per route, a DeepSeek reference-rate preset, clear-all, and live per-route/total cost preview. Legacy model-only price keys still apply as a fallback.
+- Accept a pasted cc-switch template object literal in the template editor: a `function` extractor becomes the stored source string and the usual `.replace(...)` URL becomes `{{baseUrlRoot}}`, with a conversion note instead of a JSON error.
+- Fix custom-template results being rendered by the DeepSeek card: only `mode === "deepseek"` uses that card now, and every other mode (including `template`) uses the generic rows card.
+- Make the DeepSeek balance card resilient: read `balance_infos` through relay wrappers, fall back to plain `balance`/`remaining` fields, surface an endpoint `error` message, and keep the raw response one click away.
 - Compute the ledger's cost in the panel from the current price table (route key first, legacy model key second), so saving a price immediately refreshes every visible figure rather than waiting for a host rebuild.
 - Add display settings for the header balance (default on) and the sidebar provider/balance line (default off), with per-key defaults instead of "everything on".
 - Show the current route's headline figure (credits, wallet balance, remaining row, or window percentage) inside the conversation-header usage button, with a hover card listing rows, window percentages, and reset countdowns.
