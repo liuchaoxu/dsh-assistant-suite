@@ -17,7 +17,8 @@ Screenshots use sample data. Balances, quotas, and notification permission state
 ## Features
 
 - **Usage for the current model:** Query the provider account used by the conversation, or choose another configured target without changing the conversation model.
-- **Sidebar usage ticker:** Scrolls the key numbers of the provider behind the current conversation above Settings, for example "Provider: Command Code Balance: $12.50", so they stay visible with the panel closed. It reuses the panel's query and cache and can be turned off.
+- **Always-on header figure:** The usage button shows the remaining balance or window percentage; hovering lists balance, usage, window progress, and reset countdowns without opening the dialog (on by default, switchable).
+- **Sidebar usage ticker:** Scrolls the key numbers of the provider behind the current conversation above Settings, for example "Provider: Command Code Balance: $12.50" (off by default, switchable). It reuses the panel's query and cache.
 - **Manual and automatic refresh:** Refresh on demand or on a configurable background interval. A failed refresh keeps the last successful result visible.
 - **Command Code balance history:** Collect local samples every ten minutes. Review today, yesterday, recent weeks or months, or a custom date range; clear individual months or reset the account history.
 - **System notifications:** Get notified when an action needs approval, the model asks a question, a turn ends, generation fails, or output is truncated. Real notifications link back to their conversation.
@@ -79,7 +80,7 @@ A service outside the built-in adapters can describe its usage endpoint with a t
 #### Steps
 
 1. Store the provider's API key in **Settings → Models**; the template uses that route's credential reference, shown in the settings page.
-2. Expand the provider under **Custom usage templates** and click **Set template**.
+2. Expand the provider under **Custom usage templates** and click **Set template**. Start from a preset (Command Code, One API / New API, OpenRouter, Moonshot / Kimi, SiliconFlow, DeepSeek official, or the generic blank template), or click **Initialize from the built-in adapter** to turn the endpoint and fields this plugin already uses into an editable template.
 3. Edit the JSON. The editor previews the resolved request URL live (the key is masked as `***`) and checks JSON validity, same-origin rules, the method, and placeholders.
 4. Click **Test template**: the draft is sent for real. Success lists the fields the panel would show; failure shows the host's own error (HTTP status, origin rule, extraction failure). Testing never saves.
 5. Click **Save template**, then refresh the usage panel. Removing a template falls back to the built-in adapter.
@@ -181,7 +182,7 @@ Open the chart for a larger view. Select a date range, including a custom start 
 
 ## Notifications and display settings
 
-Open **Settings → Assistant Suite** to manage system notifications, test notification delivery, and choose optional sections in the usage panel. The balance and quota section is always shown; **Usage ticker in the sidebar** controls the always-on numbers at the sidebar foot.
+Open **Settings → Assistant Suite** to manage system notifications, test notification delivery, and choose optional sections in the usage panel. The balance and quota section is always shown; **Balance next to the usage button** defaults to on, and **Provider and balance at the sidebar bottom** defaults to off.
 
 | Event | Notification |
 | --- | --- |

@@ -62,12 +62,15 @@ const displayTree = registrations[0].component({
 const visit = (node) => Array.isArray(node) ? node.flatMap(visit)
   : node && typeof node === 'object' ? [node, ...visit(node.children ?? [])] : []
 const checkboxes = visit(displayTree).filter((node) => node.type === 'input' && node.props.type === 'checkbox')
-assert.equal(checkboxes.length, 9)
-assert.ok(checkboxes.every((node) => node.props.checked === true))
+assert.equal(checkboxes.length, 10)
+const tickerToggle = checkboxes.find((node) => node.props['aria-label'] === 'display.ticker')
+assert.equal(tickerToggle.props.checked, false, 'the sidebar ticker defaults to off')
+assert.ok(checkboxes.filter((node) => node !== tickerToggle).every((node) => node.props.checked === true))
+const headlineToggle = checkboxes.find((node) => node.props['aria-label'] === 'display.headline')
+assert.equal(headlineToggle.props.checked, true, 'the header balance defaults to on')
 const balanceToggle = checkboxes.find((node) => node.props['aria-label'] === 'display.balance')
 assert.equal(balanceToggle.props.disabled, true)
-assert.ok(checkboxes.some((node) => node.props['aria-label'] === 'display.ticker'))
-assert.match(source, /key === "balance" \|\| parsed\[key\] !== false/)
+assert.match(source, /value === undefined \? DEFAULT_DISPLAY\[key\] : value !== false/)
 const tickerRegistration = registrations.find((entry) => entry.options.name === 'sidebar.footer.action')
 assert.equal(tickerRegistration.options.id, 'usage-ticker')
 assert.equal(typeof tickerRegistration.options.inject().fetchBalance, 'function')
@@ -132,6 +135,17 @@ assert.equal(keyListeners.length, 0)
 React.useEffect = () => {}
 assert.match(source, /dsh-model-usage/)
 assert.match(source, /dsh-reminding/)
+
+// Header button carries a headline value seat and a hover card portal; the
+// template editor ships provider presets.
+assert.match(source, /dsh-usage-btn-value/)
+assert.match(source, /dsh-usage-hover/)
+assert.match(source, /TEMPLATE_PRESETS/)
+assert.match(source, /function builtinTemplate/)
+assert.match(source, /templates\.builtinHint/)
+for (const preset of ['commandcode', 'newapi', 'openrouter', 'moonshot', 'siliconflow', 'deepseek', 'generic']) {
+  assert.match(source, new RegExp(`preset\\.${preset}`))
+}
 
 // The suite settings page also hosts the per-provider template editor, which is
 // fed the same provider directory the usage panel uses.

@@ -1,8 +1,11 @@
 # Changelog
 
 ## Unreleased
+- Add display settings for the header balance (default on) and the sidebar provider/balance line (default off), with per-key defaults instead of "everything on".
+- Show the current route's headline figure (credits, wallet balance, remaining row, or window percentage) inside the conversation-header usage button, with a hover card listing rows, window percentages, and reset countdowns.
+- Add provider presets to the template editor: Command Code, One API / New API, OpenRouter, Moonshot / Kimi, SiliconFlow, DeepSeek official, and a generic blank template.
+- Add **Initialize from the built-in adapter** to the template editor: it turns the route's built-in endpoint and field mapping into an editable draft, and explains why there is nothing to copy for account-only routes, configured templates, or providers without an adapter.
 - Add a sidebar-foot usage ticker for the current conversation's provider route: one scrolling line, one cached request, paused while the page is hidden, hidden in the collapsed rail, and switchable in the panel display settings.
-- Document the design review against CC Switch, including the prioritized gaps (token/cost coverage, quota alerts, cross-device storage, request coalescing) in `docs/design-review.md`.
 - Tighten the user-facing copy in both languages: shorter panel hints and setting labels, plainer template guidance, and shorter error messages.
 - Fix the settings page not forwarding the injected template-test function to the editor, which made **Test template** report that the host did not support it.
 - Add a per-provider template editor to the assistant suite settings page: templates saved in the browser are sent with that provider's usage query (host validates the shape and never trusts it blindly) and override the provider-configuration template.
