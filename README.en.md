@@ -17,6 +17,7 @@ Screenshots use sample data. Balances, quotas, and notification permission state
 ## Features
 
 - **Usage for the current model:** Query the provider account used by the conversation, or choose another configured target without changing the conversation model.
+- **Sidebar usage ticker:** Scrolls the key numbers of the provider behind the current conversation above Settings, for example "Provider: Command Code Balance: $12.50", so they stay visible with the panel closed. It reuses the panel's query and cache and can be turned off.
 - **Manual and automatic refresh:** Refresh on demand or on a configurable background interval. A failed refresh keeps the last successful result visible.
 - **Command Code balance history:** Collect local samples every ten minutes. Review today, yesterday, recent weeks or months, or a custom date range; clear individual months or reset the account history.
 - **System notifications:** Get notified when an action needs approval, the model asks a question, a turn ends, generation fails, or output is truncated. Real notifications link back to their conversation.
@@ -180,7 +181,7 @@ Open the chart for a larger view. Select a date range, including a custom start 
 
 ## Notifications and display settings
 
-Open **Settings → Assistant Suite** to manage system notifications, test notification delivery, and choose optional sections in the usage panel. The balance and quota section is always shown.
+Open **Settings → Assistant Suite** to manage system notifications, test notification delivery, and choose optional sections in the usage panel. The balance and quota section is always shown; **Usage ticker in the sidebar** controls the always-on numbers at the sidebar foot.
 
 | Event | Notification |
 | --- | --- |

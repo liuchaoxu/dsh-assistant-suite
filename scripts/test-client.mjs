@@ -48,7 +48,7 @@ const ctx = {
 }
 plugin.apply(ctx)
 assert.deepEqual(registrations.map((entry) => entry.options.name), [
-  'assistant-suite.usage-settings', 'conversation.session.header.utilities', 'settings.section',
+  'assistant-suite.usage-settings', 'conversation.session.header.utilities', 'sidebar.footer.action', 'settings.section',
 ])
 assert.equal(registrations[0].options.locale, 'dsh-model-usage')
 assert.equal(typeof registrations[0].component, 'function')
@@ -62,16 +62,27 @@ const displayTree = registrations[0].component({
 const visit = (node) => Array.isArray(node) ? node.flatMap(visit)
   : node && typeof node === 'object' ? [node, ...visit(node.children ?? [])] : []
 const checkboxes = visit(displayTree).filter((node) => node.type === 'input' && node.props.type === 'checkbox')
-assert.equal(checkboxes.length, 8)
+assert.equal(checkboxes.length, 9)
 assert.ok(checkboxes.every((node) => node.props.checked === true))
 const balanceToggle = checkboxes.find((node) => node.props['aria-label'] === 'display.balance')
 assert.equal(balanceToggle.props.disabled, true)
+assert.ok(checkboxes.some((node) => node.props['aria-label'] === 'display.ticker'))
 assert.match(source, /key === "balance" \|\| parsed\[key\] !== false/)
-assert.equal(registrations[2].options.id, 'assistant-suite')
-assert.equal(registrations[2].options.order, 30)
-assert.equal(registrations[2].options.label(), '助手套件')
-assert.equal(registrations[2].options.children['assistant-suite.usage-settings'].kind, 'single')
-assert.equal(typeof registrations[2].component, 'function')
+const tickerRegistration = registrations.find((entry) => entry.options.name === 'sidebar.footer.action')
+assert.equal(tickerRegistration.options.id, 'usage-ticker')
+assert.equal(typeof tickerRegistration.options.inject().fetchBalance, 'function')
+assert.equal(tickerRegistration.options.inject().fetchProviders, undefined, 'the ticker follows one route, not a provider sweep')
+const tickerProps = {
+  t: (key) => key,
+  fetchBalance: () => Promise.resolve({ ok: true, value: { data: { rows: [] } } }),
+}
+assert.equal(tickerRegistration.component({ ...tickerProps, wide: false }), null, 'the collapsed rail hides the ticker')
+assert.equal(tickerRegistration.component({ ...tickerProps, wide: true }), null, 'no conversation route yet, so nothing to show')
+assert.equal(registrations[3].options.id, 'assistant-suite')
+assert.equal(registrations[3].options.order, 30)
+assert.equal(registrations[3].options.label(), '助手套件')
+assert.equal(registrations[3].options.children['assistant-suite.usage-settings'].kind, 'single')
+assert.equal(typeof registrations[3].component, 'function')
 
 // The manual refresh action belongs beside the timestamp and retains its
 // accessible name when rendered without visible text.

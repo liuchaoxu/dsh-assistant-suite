@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Add a sidebar-foot usage ticker for the current conversation's provider route: one scrolling line, one cached request, paused while the page is hidden, hidden in the collapsed rail, and switchable in the panel display settings.
+- Document the design review against CC Switch, including the prioritized gaps (token/cost coverage, quota alerts, cross-device storage, request coalescing) in `docs/design-review.md`.
 - Tighten the user-facing copy in both languages: shorter panel hints and setting labels, plainer template guidance, and shorter error messages.
 - Fix the settings page not forwarding the injected template-test function to the editor, which made **Test template** report that the host did not support it.
 - Add a per-provider template editor to the assistant suite settings page: templates saved in the browser are sent with that provider's usage query (host validates the shape and never trusts it blindly) and override the provider-configuration template.
