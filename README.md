@@ -8,7 +8,7 @@
 
 为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 提供**模型供应商用量查询、余额消耗趋势和系统提醒**。将 `dsh-model-usage` 与 `dsh-reminding` 合并为一个插件，在会话头部查看用量，在 **设置 → 助手套件** 统一管理通知和面板显示。
 
-支持深浅色主题、磨砂玻璃面板和窄屏布局，中英文随应用语言切换。本文截图使用示例数据展示界面，余额、额度与通知权限状态不代表实际账户情况。
+当前版本：`0.2.0`。支持深浅色主题、磨砂玻璃面板和窄屏布局，中英文随应用语言切换。本文截图使用示例数据展示界面，余额、额度与通知权限状态不代表实际账户情况。
 
 ![深色用量面板：套餐额度、信用余额和余额消耗趋势](docs/screenshots/usage-dark-desktop.png)
 
@@ -67,6 +67,8 @@ dsh plugin --profile <profile> add link:/absolute/path/to/dsh-assistant-suite
 
 点击会话头部的 **用量**。默认跟随当前会话模型，点击 **查询对象** 可手动切换，密钥始终由宿主按供应商自己的凭据引用读取。
 
+![会话头部用量按钮及悬浮详情：显示当前供应商余额和已花费](docs/screenshots/header-usage-hover.png)
+
 ![浅色用量面板：跟随会话的查询对象和账户数据](docs/screenshots/usage-light-desktop.png)
 
 当前适配来源：
@@ -98,6 +100,8 @@ dsh plugin --profile <profile> add link:/absolute/path/to/dsh-assistant-suite
 3. 编辑 JSON。编辑器会实时显示 **请求预览**（解析后的 URL，密钥显示为 `***`），并检查 JSON、同源、方法和占位符。也可以直接粘贴 cc-switch 的 `{ request, extractor }` 写法（含 `function` 和 `.replace(...)` 拼接的 URL），粘贴时会自动转换。
 4. 点 **测试模板**：用当前草稿真实请求一次，成功时列出将要显示的字段，失败时给出宿主原始报错（HTTP 状态、同源限制、提取失败等）。测试不会保存。
 5. 点 **保存模板**，回到用量面板刷新即可看到结果；移除模板会退回内置适配。
+
+![第三方用量模板设置：供应商列表、预设选择、模板编辑与测试入口](docs/screenshots/custom-usage-template.png)
 
 #### 模板结构
 
@@ -213,6 +217,18 @@ usageTemplate:
 
 首次使用时点击 **测试** 完成权限授权并验证通知。真实通知带有会话信息，点击后尝试将窗口切到前台并打开对应对话；测试通知只用于验证通知和聚焦窗口，不跳转会话。
 
+## Token 用量与费用
+
+插件启用后在宿主侧累计 `assistant/message` 事件中的输入、输出、缓存读取 Token 数及请求数，按日期、供应商和模型汇总，提供最近 30 天的明细。此统计不会回溯启用前的请求，也不会把不同供应商的同名模型合并计价。
+
+在用量面板的 **Token 与费用** 区域，可按供应商/模型填写输入、输出和缓存读取单价（每百万 Token），也可填入 DeepSeek 参考单价。费用按当前价格即时计算；历史请求使用当前配置的单价重新估算。清空单价后仍保留 Token 统计，但不显示费用。
+
+统计和价格表保存在 `$DSH_HOME/assistant-suite/usage-ledger.json`；可用 `DSH_ASSISTANT_LEDGER` 指定文件路径。该文件属于本机宿主数据，不会同步到浏览器或随插件包发布。
+
+![Token 与费用卡片：近 30 天请求和 Token 汇总、按模型展示费用](docs/screenshots/token-cost-card.png)
+
+![单价设置：按供应商和模型填写输入、输出及缓存读取价格](docs/screenshots/token-cost-pricing.png)
+
 ## 窄屏与矮窗口
 
 下面的截图分别展示窄屏用量、设置和趋势视图，以及矮窗口下可滚动的趋势布局。
@@ -229,7 +245,7 @@ usageTemplate:
 
 供应商查询在宿主进程执行，浏览器接收归一化用量、凭据引用名和来源，不接收密钥值。查询会访问相应供应商 API；提醒通过宿主本地路由传递。相关路由使用宿主连接服务检查浏览器请求的信任状态。
 
-刷新策略、手动查询对象、历史记录和显示开关保存在浏览器 `localStorage`，按浏览器配置及站点来源隔离。提醒根据已提交的会话事件生成，不修改会话内容。Token 统计在宿主侧累计 `assistant/message` 事件的用量，写入 `$DSH_HOME/assistant-suite/usage-ledger.json`（可用 `DSH_ASSISTANT_LEDGER` 指定其它路径），只统计插件启用后发生的请求；单价表也只保存在这个文件里。当前主机端提醒模块还会在 `lib/dsh-reminding-debug.log` 写入本地加载与窗口聚焦诊断信息，该日志不包含在 npm 发布包内。
+刷新策略、手动查询对象、历史记录和显示开关保存在浏览器 `localStorage`，按浏览器配置及站点来源隔离。提醒根据已提交的会话事件生成，不修改会话内容。当前主机端提醒模块还会在 `lib/dsh-reminding-debug.log` 写入本地加载与窗口聚焦诊断信息，该日志不包含在 npm 发布包内。
 
 ## 常见问题
 

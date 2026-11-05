@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 - Add a host-side session usage ledger: `assistant/message` usage (input, output, cache read, total tokens and requests) is folded per day/provider/model into `$DSH_HOME/assistant-suite/usage-ledger.json`, with duplicate sequence numbers ignored.
 - Add a **Tokens and cost** card to the usage panel showing the last 30 days, per-model rows, and a structured price editor keyed by provider/model: three fields per route, a DeepSeek reference-rate preset, clear-all, and live per-route/total cost preview. Legacy model-only price keys still apply as a fallback.
 - Accept a pasted cc-switch template object literal in the template editor: a `function` extractor becomes the stored source string and the usual `.replace(...)` URL becomes `{{baseUrlRoot}}`, with a conversion note instead of a JSON error.

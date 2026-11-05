@@ -6,7 +6,7 @@
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-43853d.svg)](https://nodejs.org/)
 
-The suite combines provider usage queries, balance history, and system notifications for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). Open **Usage** in a conversation header to inspect the account behind the selected model. Manage notifications and panel display under **Settings → Assistant Suite**.
+Version `0.2.0` combines provider usage queries, balance history, token and cost tracking, and system notifications for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). Open **Usage** in a conversation header to inspect the account behind the selected model. Manage notifications and panel display under **Settings → Assistant Suite**.
 
 It combines the features previously provided by `dsh-model-usage` and `dsh-reminding`. When migrating, install and enable the suite, then disable both standalone plugins to prevent duplicate usage entries, routes, or notifications. Existing local preferences and Command Code history are reused when the browser profile and site origin are the same.
 
@@ -58,6 +58,8 @@ Disable the standalone `dsh-model-usage` and `dsh-reminding` plugins after enabl
 
 Click **Usage** in the conversation header. By default, the query follows the current conversation model. Use **Query target** to select another provider route; this does not change the model used for the conversation. Credentials are read by the host through the provider's credential reference.
 
+![Conversation header usage button with a hover summary of provider balance and spend](docs/screenshots/header-usage-hover.png)
+
 | Provider or route | Reported information |
 | --- | --- |
 | Command Code | Plan, five-hour and seven-day windows, credit balance, spend, request count, balance history |
@@ -70,6 +72,18 @@ Click **Usage** in the conversation header. By default, the query follows the cu
 | New API and other OpenAI-compatible routes with `baseURL` | `/api/user/self` quota balance, usage, total, and account or request details when provided |
 
 Usage belongs to the provider account, so different models using the same credential may share a balance or quota. The New API adapter converts the `quota` and `used_quota` fields returned by `/api/user/self`; a `baseURL` such as `https://host/prefix/v1` supports deployments behind a reverse-proxy path. Other OpenAI-compatible services work only when they implement the same endpoint and fields. The OpenCode Go adapter also depends on endpoint conventions and may not work with every compatible service. OpenCode Zen pay-as-you-go routes do not have a supported usage adapter.
+
+## Token usage and cost
+
+After the suite is enabled, the host records input, output, cache-read token counts, and request counts from `assistant/message` events. The panel groups these by day, provider, and model for the last 30 days. It does not backfill requests from before installation, and same-named models from different providers remain separate.
+
+In **Tokens and cost**, enter input, output, and cache-read prices per provider/model (per million tokens), or fill the DeepSeek reference rates. Costs recalculate from the current price table, including for historical token counts. Clearing prices keeps token counts while hiding cost totals.
+
+![Tokens and cost card with 30-day request and token totals and model costs](docs/screenshots/token-cost-card.png)
+
+![Price editor with input, output, and cache-read rates for each provider and model](docs/screenshots/token-cost-pricing.png)
+
+The host stores counts and prices in `$DSH_HOME/assistant-suite/usage-ledger.json`; set `DSH_ASSISTANT_LEDGER` to use another path. This local host file is not synced to the browser or included in the plugin package.
 
 ### Custom usage templates
 
@@ -85,6 +99,8 @@ A service outside the built-in adapters can describe its usage endpoint with a t
 3. Edit the JSON. The editor previews the resolved request URL live (the key is masked as `***`) and checks JSON validity, same-origin rules, the method, and placeholders. You can also paste a cc-switch `{ request, extractor }` object literal (including a `function` extractor and a `.replace(...)`-built URL); it is converted on paste.
 4. Click **Test template**: the draft is sent for real. Success lists the fields the panel would show; failure shows the host's own error (HTTP status, origin rule, extraction failure). Testing never saves.
 5. Click **Save template**, then refresh the usage panel. Removing a template falls back to the built-in adapter.
+
+![Custom usage template settings with provider list, presets, editor, and test action](docs/screenshots/custom-usage-template.png)
 
 #### Template shape
 
