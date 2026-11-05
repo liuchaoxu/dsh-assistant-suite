@@ -62,7 +62,7 @@ const displayTree = registrations[0].component({
 const visit = (node) => Array.isArray(node) ? node.flatMap(visit)
   : node && typeof node === 'object' ? [node, ...visit(node.children ?? [])] : []
 const checkboxes = visit(displayTree).filter((node) => node.type === 'input' && node.props.type === 'checkbox')
-assert.equal(checkboxes.length, 10)
+assert.equal(checkboxes.length, 11)
 const tickerToggle = checkboxes.find((node) => node.props['aria-label'] === 'display.ticker')
 assert.equal(tickerToggle.props.checked, false, 'the sidebar ticker defaults to off')
 assert.ok(checkboxes.filter((node) => node !== tickerToggle).every((node) => node.props.checked === true))
@@ -143,6 +143,11 @@ assert.match(source, /dsh-usage-hover/)
 assert.match(source, /TEMPLATE_PRESETS/)
 assert.match(source, /function builtinTemplate/)
 assert.match(source, /templates\.builtinHint/)
+assert.match(source, /model-usage\/ledger/)
+assert.match(source, /ledger\.title/)
+assert.match(source, /ledger\.priceTitle/)
+assert.match(source, /DEEPSEEK_REFERENCE_PRICE/)
+assert.match(source, /function priceEntry/)
 for (const preset of ['commandcode', 'newapi', 'openrouter', 'moonshot', 'siliconflow', 'deepseek', 'generic']) {
   assert.match(source, new RegExp(`preset\\.${preset}`))
 }

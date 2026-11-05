@@ -20,6 +20,7 @@ Screenshots use sample data. Balances, quotas, and notification permission state
 - **Always-on header figure:** The usage button shows the remaining balance or window percentage; hovering lists balance, usage, window progress, and reset countdowns without opening the dialog (on by default, switchable).
 - **Sidebar usage ticker:** Scrolls the key numbers of the provider behind the current conversation above Settings, for example "Provider: Command Code Balance: $12.50" (off by default, switchable). It reuses the panel's query and cache.
 - **Manual and automatic refresh:** Refresh on demand or on a configurable background interval. A failed refresh keeps the last successful result visible.
+- **Tokens and cost:** Requests, input/output/cache-read tokens by day, provider, and model. Prices are set per provider/model (the same model can differ between providers); fill DeepSeek reference rates in one click and see per-model and total cost update as you type.
 - **Command Code balance history:** Collect local samples every ten minutes. Review today, yesterday, recent weeks or months, or a custom date range; clear individual months or reset the account history.
 - **System notifications:** Get notified when an action needs approval, the model asks a question, a turn ends, generation fails, or output is truncated. Real notifications link back to their conversation.
 - **Unified settings:** Control notification permissions and choose which optional sections appear in the usage panel.
@@ -199,7 +200,7 @@ When an approval or question is handled, its notification is dismissed. Subagent
 
 Provider queries run in the host process. The browser receives normalized usage, the credential reference name, and the data source; credential values stay in the host. Queries access the corresponding provider API. Notifications use a local host route, which checks browser request trust through the host connection service.
 
-Refresh preferences, manual query target, history, and display settings are stored in browser `localStorage` and scoped to the browser profile and site origin. Notifications use committed session events and do not modify session content. The host notification module also writes local loading and window-focus diagnostics to `lib/dsh-reminding-debug.log`; this log is not included in the npm package.
+Refresh preferences, manual query target, history, and display settings are stored in browser `localStorage` and scoped to the browser profile and site origin. Notifications use committed session events and do not modify session content. Token statistics accumulate the usage of `assistant/message` events in the host and are written to `$DSH_HOME/assistant-suite/usage-ledger.json` (`DSH_ASSISTANT_LEDGER` overrides the path); only requests that happen after the plugin is enabled are counted, and the price table lives in that same file. The host notification module also writes local loading and window-focus diagnostics to `lib/dsh-reminding-debug.log`; this log is not included in the npm package.
 
 ## Troubleshooting
 

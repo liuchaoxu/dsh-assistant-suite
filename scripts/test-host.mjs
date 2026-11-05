@@ -1,10 +1,20 @@
 import assert from 'node:assert/strict'
 import { EventEmitter } from 'node:events'
+import { rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { apply, inject } from '../lib/index.js'
+const ledgerFile = join(tmpdir(), `dsh-assistant-suite-ledger-${process.pid}-${Date.now()}.json`)
+process.env.DSH_ASSISTANT_LEDGER = ledgerFile
 const routes = [], listeners = new Map()
 const services = new Map()
 const ctx = {
-  on(event, listener) { listeners.set(event, listener); return () => listeners.delete(event) },
+  on(event, listener) {
+    const set = listeners.get(event) ?? new Set()
+    set.add(listener)
+    listeners.set(event, set)
+    return () => set.delete(listener)
+  },
   get(name) { return services.get(name) ?? (name === 'connection' ? { requestRejection: () => undefined } : undefined) },
   effect(setup) { return setup() },
   webServer: { register(route) { routes.push(route); return () => {} } },
@@ -12,10 +22,12 @@ const ctx = {
 apply(ctx)
 assert.deepEqual(inject, ['webServer'])
 assert.deepEqual(new Set(routes.map((route) => route.path)), new Set([
-  '/model-usage/balance','/model-usage/providers','/model-usage/models','/reminding/poll','/reminding/focus'
+  '/model-usage/balance','/model-usage/providers','/model-usage/models',
+  '/model-usage/ledger','/model-usage/ledger/prices',
+  '/reminding/poll','/reminding/focus',
 ]))
-assert.equal(routes.length, 5)
-assert.equal(typeof listeners.get('session/event'), 'function')
+assert.equal(routes.length, 7)
+assert.ok((listeners.get('session/event')?.size ?? 0) >= 2)
 
 const balanceRoute = routes.find((entry) => entry.path === '/model-usage/balance')
 async function invokeBalance(provider, extra = {}) {
@@ -29,6 +41,22 @@ async function invokeBalance(provider, extra = {}) {
   res.writeHead = () => {}
   res.end = (body) => { res.body = body }
   await balanceRoute.handler(req, res)
+  return JSON.parse(res.body)
+}
+
+/** Call any exact route with an optional JSON body. */
+async function invokeRoute(path, method = 'GET', body) {
+  const route = routes.find((entry) => entry.path === path)
+  const req = {
+    method,
+    async *[Symbol.asyncIterator]() {
+      if (body !== undefined) yield Buffer.from(JSON.stringify(body))
+    },
+  }
+  const res = new EventEmitter()
+  res.writeHead = () => {}
+  res.end = (value) => { res.body = value }
+  await route.handler(req, res)
   return JSON.parse(res.body)
 }
 
@@ -208,7 +236,46 @@ try {
   globalThis.fetch = async () => { malformedFetched = true; return { ok: true, json: async () => ({ remaining: 1 }) } }
   const ignored = await invokeBalance('custom-usage', { template: { request: { url: 'x' }, extractor: 42 } })
   assert.equal(ignored.ok, true)
+
+  // Assistant-message usage folds into the local ledger; a repeated sequence
+  // number is ignored, and a price table makes the cost column real.
+  const emit = [...(listeners.get('session/event') ?? [])]
+  const source = { kind: 'model', provider: 'command', model: 'deepseek/deepseek-v4.1-flash' }
+  const usage = { inputTokens: 100, outputTokens: 50, cacheReadTokens: 900, totalTokens: 1050 }
+  const session = { header: { id: 'session-ledger' } }
+  const event = (seq) => ({
+    type: 'assistant/message',
+    seq,
+    time: Date.now(),
+    data: { usage, message: { source } },
+  })
+  for (const listener of emit) listener(session, event(1))
+  for (const listener of emit) listener(session, event(1))
+  const ledger = await invokeRoute('/model-usage/ledger')
+  assert.equal(ledger.ok, true)
+  assert.equal(ledger.value.totals.requests, 1)
+  assert.equal(ledger.value.totals.input, 100)
+  assert.equal(ledger.value.totals.output, 50)
+  assert.equal(ledger.value.totals.cacheRead, 900)
+  assert.equal(ledger.value.totals.total, 1050)
+  assert.equal(ledger.value.models[0].model, 'deepseek/deepseek-v4.1-flash')
+  assert.equal(ledger.value.prices != null, true)
+
+  // A legacy model-keyed table still applies, then a route-keyed entry wins.
+  const legacyPriced = await invokeRoute('/model-usage/ledger/prices', 'PUT', {
+    prices: { 'deepseek/deepseek-v4.1-flash': { input: 1, output: 2, cacheRead: 0.1 } },
+  })
+  assert.equal(legacyPriced.ok, true)
+  assert.ok(Math.abs(legacyPriced.value.totals.cost - 0.00029) < 1e-12)
+  const priced = await invokeRoute('/model-usage/ledger/prices', 'PUT', {
+    prices: { 'command/deepseek/deepseek-v4.1-flash': { input: 2, output: 2, cacheRead: 0.1 } },
+  })
+  assert.equal(priced.ok, true)
+  assert.ok(Math.abs(priced.value.totals.cost - 0.00039) < 1e-12)
+  const badPrices = await invokeRoute('/model-usage/ledger/prices', 'PUT', { prices: { x: { input: -1 } } })
+  assert.equal(badPrices.ok, false)
 } finally {
   globalThis.fetch = originalFetch
+  try { rmSync(ledgerFile, { force: true }) } catch { /* best effort */ }
 }
-console.log('Host test passed: both features mount, New API normalizes, and both usage-template shapes resolve.')
+console.log('Host test passed: routes mount, New API normalizes, templates resolve, and the usage ledger counts tokens and cost.')
