@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+- Tighten the user-facing copy in both languages: shorter panel hints and setting labels, plainer template guidance, and shorter error messages.
+- Fix the settings page not forwarding the injected template-test function to the editor, which made **Test template** report that the host did not support it.
+- Add a per-provider template editor to the assistant suite settings page: templates saved in the browser are sent with that provider's usage query (host validates the shape and never trusts it blindly) and override the provider-configuration template.
+- Add an in-editor configuration guide (field table, placeholders, extractor result fields, limits), live request preview with the key masked, draft validation for JSON / method / origin / placeholders, and a **Test template** action that runs the draft against the provider without saving it.
+- Report the resolved request URL (credential masked) from template queries so the settings page can confirm what was actually called.
+- Add cc-switch compatible custom usage templates: a provider may declare `usageTemplate.request` plus a JavaScript `extractor`, run by the host in a sandboxed `vm` context with a one-second deadline.
+- Support `{{baseUrlRoot}}` and `{{origin}}` placeholders, optional POST bodies, and extractor fields such as `used`, `total`, `windows`, and `status`; keep the declarative `extract` shape working.
+- Add an explicit New API usage adapter for named routes and reverse-proxy subpaths.
+- Show the New API account name and request count when returned by `/api/user/self`.
+- Add host regression coverage for endpoint URL construction, bearer auth, quota normalization, both template shapes, and payload-template precedence.
+
 ## 0.1.1
 - Prepare public npm packaging with repository metadata, keywords, build and publish checks, and the MIT license; include client sources, scripts and documentation assets.
 - Expand the README with installation, migration, usage, notification settings, and 11 screenshots renamed by feature, theme and display layout.

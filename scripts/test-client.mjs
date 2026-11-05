@@ -52,7 +52,13 @@ assert.deepEqual(registrations.map((entry) => entry.options.name), [
 ])
 assert.equal(registrations[0].options.locale, 'dsh-model-usage')
 assert.equal(typeof registrations[0].component, 'function')
-const displayTree = registrations[0].component({ t: (key) => key })
+const fetchProvidersStub = () => Promise.resolve({ ok: true, value: [] })
+const testTemplateStub = () => Promise.resolve({ ok: true, value: { data: { rows: [] } } })
+const displayTree = registrations[0].component({
+  t: (key) => key,
+  fetchProviders: fetchProvidersStub,
+  testTemplate: testTemplateStub,
+})
 const visit = (node) => Array.isArray(node) ? node.flatMap(visit)
   : node && typeof node === 'object' ? [node, ...visit(node.children ?? [])] : []
 const checkboxes = visit(displayTree).filter((node) => node.type === 'input' && node.props.type === 'checkbox')
@@ -115,4 +121,19 @@ assert.equal(keyListeners.length, 0)
 React.useEffect = () => {}
 assert.match(source, /dsh-model-usage/)
 assert.match(source, /dsh-reminding/)
+
+// The suite settings page also hosts the per-provider template editor, which is
+// fed the same provider directory the usage panel uses.
+assert.match(source, /dsh-assistant-suite:usage-templates/)
+const injectProps = registrations[0].options.inject()
+assert.equal(typeof injectProps.fetchProviders, 'function')
+assert.equal(typeof injectProps.testTemplate, 'function')
+const templateEntry = visit(displayTree).find((node) => node.type && node.type.name === 'UsageTemplatesSettings')
+assert.ok(templateEntry, 'settings page mounts the template editor')
+// Regression: the display panel must forward the injected test function, or the
+// editor's "Test template" button has nothing to call.
+assert.equal(templateEntry.props.testTemplate, testTemplateStub)
+const templatesTree = templateEntry.type(templateEntry.props)
+assert.ok(visit(templatesTree).some((node) => Array.isArray(node.children) && node.children.includes('templates.section')))
+assert.equal(visit(templatesTree).some((node) => node.type === 'textarea'), false)
 console.log('Client test passed: usage control and reminder settings mount together.')

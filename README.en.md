@@ -64,9 +64,99 @@ Click **Usage** in the conversation header. By default, the query follows the cu
 | OpenRouter | Key usage, limit, remaining amount, and account credit pool when available |
 | Moonshot / Kimi | Available, cash, and voucher balances |
 | SiliconFlow | Total, charged, and granted balances |
-| Other OpenAI-compatible routes with `baseURL` | Best-effort conversion of the New API `/api/user/self` quota convention |
+| New API and other OpenAI-compatible routes with `baseURL` | `/api/user/self` quota balance, usage, total, and account or request details when provided |
 
-Usage belongs to the provider account, so different models using the same credential may share a balance or quota. The plugin displays fields returned by each provider. The OpenCode Go and New API adapters depend on endpoint conventions and may not work with every compatible service. OpenCode Zen pay-as-you-go routes do not have a supported usage adapter.
+Usage belongs to the provider account, so different models using the same credential may share a balance or quota. The New API adapter converts the `quota` and `used_quota` fields returned by `/api/user/self`; a `baseURL` such as `https://host/prefix/v1` supports deployments behind a reverse-proxy path. Other OpenAI-compatible services work only when they implement the same endpoint and fields. The OpenCode Go adapter also depends on endpoint conventions and may not work with every compatible service. OpenCode Zen pay-as-you-go routes do not have a supported usage adapter.
+
+### Custom usage templates
+
+A service outside the built-in adapters can describe its usage endpoint with a template. There are two places to put one:
+
+- **Settings page (recommended, editable any time)**: open **Settings → Assistant Suite → Custom usage templates** and fill one in per provider that already has a key. Templates saved there stay in the current browser, travel with that provider's query, and win over the provider-configuration template.
+- **Provider configuration (shipped with the config)**: for example `llm-pi-ai.providers.<id>.usageTemplate`; the host picks it up after a reload.
+
+#### Steps
+
+1. Store the provider's API key in **Settings → Models**; the template uses that route's credential reference, shown in the settings page.
+2. Expand the provider under **Custom usage templates** and click **Set template**.
+3. Edit the JSON. The editor previews the resolved request URL live (the key is masked as `***`) and checks JSON validity, same-origin rules, the method, and placeholders.
+4. Click **Test template**: the draft is sent for real. Success lists the fields the panel would show; failure shows the host's own error (HTTP status, origin rule, extraction failure). Testing never saves.
+5. Click **Save template**, then refresh the usage panel. Removing a template falls back to the built-in adapter.
+
+#### Template shape
+
+| Field | Required | Meaning |
+| --- | --- | --- |
+| `request.url` | yes | Endpoint. Supports the placeholders below; its host must match the provider `baseURL`. |
+| `request.method` | no | `GET` (default) or `POST`. |
+| `request.headers` | no | Name → value; values support placeholders. Without `Authorization` the host adds `Bearer {{apiKey}}`. |
+| `request.body` | no | POST only; a JSON object or string with placeholders, sent as `application/json` unless a `Content-Type` is set. |
+| `extractor` | one of | Synchronous `function (response, ctx) { ... }`; `response` is the parsed JSON, `ctx` is `{ now, baseUrl }`. |
+| `extract` | one of | Declarative field paths, e.g. `{ remaining: 'data.quota' }`. |
+
+Placeholders:
+
+| Placeholder | Resolves to |
+| --- | --- |
+| `{{baseUrl}}` | The configured `baseURL` with trailing slashes removed |
+| `{{baseUrlRoot}}` | That URL without a trailing `/v1`-style version segment (cc-switch's `.replace(/\/v1$/, "")`) |
+| `{{origin}}` | Protocol plus host (`https://host[:port]`) |
+| `{{apiKey}}` | The provider key; percent-encoded in URLs, literal in headers and bodies |
+
+`extractor` result:
+
+| Field | Meaning |
+| --- | --- |
+| `remaining` / `used` / `total` | Remaining, used, total; numbers or numeric strings. A missing side is derived from the other. |
+| `unit` | Currency symbol, default `USD`; `¥`, `CNY`, and similar are accepted. |
+| `planName` / `account` / `totalCount` | Plan, account, request count (optional). |
+| `windows` | `[{ label, used, limit, resetsAt }]`, rendered as quota meters. |
+| `isValid` | `false` with no figures reports the key as rejected. |
+| A bare number | Treated as `remaining`. |
+
+Example (balance, endpoint returns `{ "data": { "balance": "12.50", "currency": "CNY" } }`):
+
+```json
+{
+  "request": { "url": "{{baseUrlRoot}}/v1/balance", "method": "GET" },
+  "extractor": "function (response) { return { remaining: response?.data?.balance, unit: response?.data?.currency ?? 'CNY' } }"
+}
+```
+
+Example (windows, endpoint returns `{ "five_hour": { "used": 12, "limit": 100, "reset_at": 1767225600 } }`):
+
+```json
+{
+  "request": { "url": "{{baseUrlRoot}}/v1/usage", "method": "GET" },
+  "extractor": "function (response) { return { windows: [{ label: '5 hours', used: response?.five_hour?.used, limit: response?.five_hour?.limit, resetsAt: (response?.five_hour?.reset_at ?? 0) * 1000 }] } }"
+}
+```
+
+Declarative form (field paths, no script):
+
+```yaml
+usageTemplate:
+  url: '{{baseUrlRoot}}/api/user/self'
+  extract:
+    remaining: data.quota
+    used: data.used_quota
+    totalCount: data.request_count
+    unit: USD
+```
+
+#### Common errors
+
+| Message | Cause / fix |
+| --- | --- |
+| `HTTP 401` / `403` | Wrong credential for that provider, or the endpoint wants different headers; set them under `request.headers`. |
+| `HTTP 404` | Wrong `request.url` path; try `{{baseUrlRoot}}` plus the real path. |
+| `用量地址的域名要和供应商 baseURL 一致` | The template targets another host; the key is deliberately not sent there. |
+| `模板没有取到余额、已用或总额` | The extractor's field names or `extract` paths do not match the payload; run the test to see the raw answer. |
+| `接口返回 isValid=false，密钥可能无效` | The endpoint reports `isValid: false` or the like; check whether the key is revoked or expired. |
+| `extractor 只能是同步函数` | An `async` function or Promise was used; compute synchronously. |
+| Timeout | The endpoint did not answer within one second (template) or 30 seconds (whole request). |
+
+Limits: the response must be JSON; the URL must stay on the provider host; the extractor is synchronous with a one-second deadline and has no `process`, `require`, or network access.
 
 The Command Code credit balance and its five-hour or seven-day windows are separate values. The suite displays provider-returned data; it does not infer a monthly total quota from a remaining credit balance.
 

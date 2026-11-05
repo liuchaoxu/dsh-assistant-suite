@@ -1,7 +1,7 @@
 {
   "name": "dsh-assistant-suite",
   "version": "0.1.1",
-  "description": "DeepSeek Harness assistant suite: provider balances, quota windows and spending history with system notifications for approvals, questions and completed turns.",
+  "description": "Assistant suite for DeepSeek Harness: provider usage and spend history, plus reminders for approvals, questions and finished turns.",
   "license": "MIT",
   "author": "liuchaoxu <ischaoxu@163.com>",
   "type": "module",

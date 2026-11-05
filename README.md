@@ -77,9 +77,99 @@ dsh plugin --profile <profile> add link:/absolute/path/to/dsh-assistant-suite
 | OpenRouter | Key 已用、额度、剩余，以及可获得的账户额度池 |
 | Moonshot / Kimi | 可用余额、现金余额、代金券 |
 | SiliconFlow | 总余额、充值余额、赠送余额 |
-| 其他带 `baseURL` 的 OpenAI 兼容路由 | 尝试 New API 的 `/api/user/self` 约定，按接口数据换算额度 |
+| New API 路由及其他带 `baseURL` 的 OpenAI 兼容路由 | 查询 `/api/user/self`，显示额度余额、已用、总额，以及接口提供的账户名和请求数 |
 
-用量属于供应商账户，多个模型使用同一个凭据时可能共享余额或额度。不同供应商返回的字段不同，插件仅显示实际返回的数据；OpenCode Go 和 New API 适配依赖接口约定，无法保证所有兼容服务均可查询。OpenCode Zen 按量计费路由没有对应适配，不应与 OpenCode Go 混淆。
+用量属于供应商账户，多个模型使用同一个凭据时可能共享余额或额度。New API 适配按其 `/api/user/self` 响应中的 `quota` 和 `used_quota` 字段换算余额；如部署在反向代理子路径下，配置的 `baseURL` 可使用 `https://host/prefix/v1` 形式。其他 OpenAI 兼容服务仅在实现相同接口和字段时可查询。OpenCode Go 适配同样依赖接口约定，无法保证所有兼容服务均可查询。OpenCode Zen 按量计费路由没有对应适配，不应与 OpenCode Go 混淆。
+
+### 自定义用量模板
+
+内置适配之外的服务，可以给它的用量接口写一个模板。两种放置方式：
+
+- **设置页（推荐，随时改）**：打开 **设置 → 助手套件 → 第三方用量模板**，为每个已配置密钥的供应商单独填写。模板只存在当前浏览器，查询该供应商时随请求发给宿主，优先于供应商配置里的模板。
+- **供应商配置（可随配置分发）**：写在供应商配置下，例如 `llm-pi-ai.providers.<id>.usageTemplate`，保存后重新加载宿主生效。
+
+#### 配置步骤
+
+1. 先在 **设置 → 模型** 里填好该供应商的 API Key；模板用的是该路由的凭据引用，设置页会显示它的名字。
+2. 在 **第三方用量模板** 里展开对应供应商，点 **设置模板**。
+3. 编辑 JSON。编辑器会实时显示 **请求预览**（解析后的 URL，密钥显示为 `***`），并检查 JSON、同源、方法和占位符。
+4. 点 **测试模板**：用当前草稿真实请求一次，成功时列出将要显示的字段，失败时给出宿主原始报错（HTTP 状态、同源限制、提取失败等）。测试不会保存。
+5. 点 **保存模板**，回到用量面板刷新即可看到结果；移除模板会退回内置适配。
+
+#### 模板结构
+
+| 字段 | 必填 | 说明 |
+| --- | --- | --- |
+| `request.url` | 是 | 接口地址。支持下面的占位符；域名必须与供应商 `baseURL` 相同。 |
+| `request.method` | 否 | `GET`（默认）或 `POST`。 |
+| `request.headers` | 否 | 请求头键值对，值支持占位符。未写 `Authorization` 时自动附加 `Bearer {{apiKey}}`。 |
+| `request.body` | 否 | 仅 POST；JSON 对象或字符串，占位符会替换，未写 `Content-Type` 时自动补 `application/json`。 |
+| `extractor` | 二选一 | 同步函数 `function (response, ctx) { ... }`；`response` 是接口 JSON，`ctx` 是 `{ now, baseUrl }`。 |
+| `extract` | 二选一 | 声明式写法：字段路径映射，如 `{ remaining: 'data.quota' }`。 |
+
+占位符：
+
+| 占位符 | 替换为 |
+| --- | --- |
+| `{{baseUrl}}` | 供应商配置的 `baseURL`（去掉结尾斜杠） |
+| `{{baseUrlRoot}}` | `baseURL` 去掉结尾的 `/v1`、`/v2` 等版本段，等价于 cc-switch 的 `.replace(/\/v1$/, "")` |
+| `{{origin}}` | 协议 + 域名（`https://host[:port]`） |
+| `{{apiKey}}` | 该供应商的密钥；URL 中百分号编码，请求头和 body 中原文 |
+
+`extractor` 返回值：
+
+| 字段 | 说明 |
+| --- | --- |
+| `remaining` / `used` / `total` | 剩余、已用、总额；数字或数值字符串。缺一侧会按另一侧推算。 |
+| `unit` | 币种符号，默认 `USD`；也接受 `¥`、`CNY` 等。 |
+| `planName` / `account` / `totalCount` | 套餐名、账户名、请求数（可选）。 |
+| `windows` | `[{ label, used, limit, resetsAt }]`，渲染为额度窗口进度条。 |
+| `isValid` | 为 `false` 且没有数字时，面板直接提示密钥无效。 |
+| 纯数字 | 视为 `remaining`。 |
+
+示例（余额型，接口返回 `{ "data": { "balance": "12.50", "currency": "CNY" } }`）：
+
+```json
+{
+  "request": { "url": "{{baseUrlRoot}}/v1/balance", "method": "GET" },
+  "extractor": "function (response) { return { remaining: response?.data?.balance, unit: response?.data?.currency ?? 'CNY' } }"
+}
+```
+
+示例（窗口型，接口返回 `{ "five_hour": { "used": 12, "limit": 100, "reset_at": 1767225600 } }`）：
+
+```json
+{
+  "request": { "url": "{{baseUrlRoot}}/v1/usage", "method": "GET" },
+  "extractor": "function (response) { return { windows: [{ label: '5 小时', used: response?.five_hour?.used, limit: response?.five_hour?.limit, resetsAt: (response?.five_hour?.reset_at ?? 0) * 1000 }] } }"
+}
+```
+
+声明式写法（只取字段，不跑脚本）：
+
+```yaml
+usageTemplate:
+  url: '{{baseUrlRoot}}/api/user/self'
+  extract:
+    remaining: data.quota
+    used: data.used_quota
+    totalCount: data.request_count
+    unit: USD
+```
+
+#### 常见错误
+
+| 提示 | 原因 / 处理 |
+| --- | --- |
+| `HTTP 401` / `403` | 该供应商的凭据不对，或接口需要不同的请求头（在 `request.headers` 里显式写）。 |
+| `HTTP 404` | `request.url` 路径不对；用 `{{baseUrlRoot}}` 加实际路径再试。 |
+| `用量地址的域名要和供应商 baseURL 一致` | 模板写到了别的主机；密钥不会外发。 |
+| `模板没有取到余额、已用或总额` | `extractor` 返回的字段名对不上接口，或 `extract` 路径写错；先点测试看原始返回。 |
+| `接口返回 isValid=false，密钥可能无效` | 接口返回 `isValid: false` 或类似字段，检查该 Key 是否被封或过期。 |
+| `extractor 只能是同步函数` | 用了 `async` 或 Promise；改成同步计算。 |
+| 超时 | 接口 1 秒内没返回（模板执行）或 30 秒（整个请求）。 |
+
+限制：响应必须是 JSON；只能请求供应商同域地址；`extractor` 同步执行、上限 1 秒；沙箱里没有 `process`、`require` 和网络。
 
 ### 刷新与数据时效
 
