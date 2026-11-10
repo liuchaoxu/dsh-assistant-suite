@@ -4,7 +4,7 @@ import { rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { apply, inject } from '../lib/index.js'
-const ledgerFile = join(tmpdir(), `dsh-assistant-suite-ledger-${process.pid}-${Date.now()}.json`)
+const ledgerFile = join(tmpdir(), `dsh-helper-ledger-${process.pid}-${Date.now()}.json`)
 process.env.DSH_ASSISTANT_LEDGER = ledgerFile
 const routes = [], listeners = new Map()
 const services = new Map()

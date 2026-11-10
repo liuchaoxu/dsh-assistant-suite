@@ -1,18 +1,31 @@
-# DSH Assistant Suite
+# DSH Helper
 
 [中文说明](README.md) | English
 
-[![npm version](https://img.shields.io/npm/v/dsh-assistant-suite.svg)](https://www.npmjs.com/package/dsh-assistant-suite)
+[![npm version](https://img.shields.io/npm/v/dsh-helper.svg)](https://www.npmjs.com/package/dsh-helper)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-43853d.svg)](https://nodejs.org/)
 
-Version `0.2.0` combines provider usage queries, balance history, token and cost tracking, and system notifications for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). Open **Usage** in a conversation header to inspect the account behind the selected model. Manage notifications and panel display under **Settings → Assistant Suite**.
+Version `0.2.0` combines provider usage queries, balance history, token and cost tracking, and system notifications for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). Open **Usage** in a conversation header to inspect the account behind the selected model. Manage notifications and panel display under **Settings → DSH Helper**.
 
-It combines the features previously provided by `dsh-model-usage` and `dsh-reminding`. When migrating, install and enable the suite, then disable both standalone plugins to prevent duplicate usage entries, routes, or notifications. Existing local preferences and Command Code history are reused when the browser profile and site origin are the same.
+The package was renamed from `dsh-assistant-suite` to **`dsh-helper`**. When upgrading, disable the old package before enabling `dsh-helper` to avoid duplicate routes. Browser preferences, balance history, and the local token ledger keep their existing storage locations.
 
-Screenshots use sample data. Balances, quotas, and notification permission states shown in them do not represent a real account.
+Current settings screenshots are browser-rendered previews of the actual plugin components using sample provider data, rather than an installed-host capture. Other screenshots include earlier UI and user-provided captures; amounts illustrate the interface.
 
 ![Dark usage panel with plan limits, credit balance, and balance history](docs/screenshots/usage-dark-desktop.png)
+
+
+## What you can do
+
+| Goal | Where and how |
+| --- | --- |
+| Check an account at a glance | Read the header balance, hover for a summary, or open Usage for quota details. |
+| Review balance changes | Inspect Command Code samples by date, expand the chart, or clear history. |
+| Compare tokens with spend | Compare estimated token cost and sampled balance spend for matching provider/account and dates. |
+| Connect another service | Select a preset or paste a cc-switch template, preview the request, test, then save. |
+| Know when a conversation needs attention | Receive approval, question, completion, and failure notifications that return to the conversation. |
+
+Install and enable **`dsh-helper`**, reload the UI, open **Usage**, then visit **Settings → DSH Helper** to test notifications and choose visible sections.
 
 ## Features
 
@@ -20,7 +33,7 @@ Screenshots use sample data. Balances, quotas, and notification permission state
 - **Always-on header figure:** The usage button shows the remaining balance or window percentage; hovering lists balance, usage, window progress, and reset countdowns without opening the dialog (on by default, switchable).
 - **Sidebar usage ticker:** Scrolls the key numbers of the provider behind the current conversation above Settings, for example "Provider: Command Code Balance: $12.50" (off by default, switchable). It reuses the panel's query and cache.
 - **Manual and automatic refresh:** Refresh on demand or on a configurable background interval. A failed refresh keeps the last successful result visible.
-- **Tokens and cost:** Requests, input/output/cache-read tokens by day, provider, and model. Prices are set per provider/model (the same model can differ between providers); fill DeepSeek reference rates in one click and see per-model and total cost update as you type.
+- **Tokens and cost:** Requests, input/output/cache-read/cache-write tokens by day, provider, and model. Prices are set per provider/model (the same model can differ between providers); fill DeepSeek reference rates in one click and see per-model and total cost update as you type.
 - **Command Code balance history:** Collect local samples every ten minutes. Review today, yesterday, recent weeks or months, or a custom date range; clear individual months or reset the account history.
 - **System notifications:** Get notified when an action needs approval, the model asks a question, a turn ends, generation fails, or output is truncated. Real notifications link back to their conversation.
 - **Unified settings:** Control notification permissions and choose which optional sections appear in the usage panel.
@@ -38,16 +51,18 @@ Screenshots use sample data. Balances, quotas, and notification permission state
 
 ## Install or upgrade
 
-Install and enable `dsh-assistant-suite` from the DSH **Plugins** page. For a profile managed by the CLI:
+The former package name `dsh-assistant-suite` has been replaced by `dsh-helper`. Disable the old package before enabling the renamed package to avoid duplicate routes. Browser preferences and the local token ledger remain in place.
+
+Install and enable `dsh-helper` from the DSH **Plugins** page. For a profile managed by the CLI:
 
 ```sh
-dsh plugin --profile <profile> add dsh-assistant-suite
+dsh plugin --profile <profile> add dsh-helper
 ```
 
 For a local checkout:
 
 ```sh
-dsh plugin --profile <profile> add link:/absolute/path/to/dsh-assistant-suite
+dsh plugin --profile <profile> add link:/absolute/path/to/dsh-helper
 ```
 
 Confirm that the bundle is enabled in the Plugins page, then reload the interface. If the host does not support hot reload, restart it. Profiles managed by the desktop application should be changed through the Plugins page. Running `npm install` only downloads the package; it does not enable the plugin in DSH.
@@ -75,21 +90,23 @@ Usage belongs to the provider account, so different models using the same creden
 
 ## Token usage and cost
 
-After the suite is enabled, the host records input, output, cache-read token counts, and request counts from `assistant/message` events. The panel groups these by day, provider, and model for the last 30 days. It does not backfill requests from before installation, and same-named models from different providers remain separate.
+The card follows the current provider, including routes confirmed to share its API origin and credential reference. For Command Code it uses the same local-calendar date range as the balance trend: today, yesterday, last seven days, last thirty days, or custom inclusive dates. Other providers show the current provider's last thirty days. Models retain separate prices.
 
-In **Tokens and cost**, enter input, output, and cache-read prices per provider/model (per million tokens), or fill the DeepSeek reference rates. Costs recalculate from the current price table, including for historical token counts. Clearing prices keeps token counts while hiding cost totals.
+Counts include input, output, cache-read and cache-write tokens. A final usage sample replaces the same attempt's earlier sample; a retry starts another billed attempt. Duplicate events are ignored. Prices are USD per million tokens, and missing prices are marked as incomplete. Set cache-write rates from the actual provider bill. Saving prices recalculates historical estimates.
 
-![Tokens and cost card with 30-day request and token totals and model costs](docs/screenshots/token-cost-card.png)
+The card compares estimated token cost with sampled balance spend over the trend date range and displays their difference. Balance samples can include other clients, top-ups and sampling boundary effects; token cost only covers locally recorded live events. These figures need not match. The open card refreshes periodically and follows manual usage refreshes.
 
-![Price editor with input, output, and cache-read rates for each provider and model](docs/screenshots/token-cost-pricing.png)
+Renaming to `dsh-helper` preserves browser settings and `$DSH_HOME/assistant-suite/usage-ledger.json` (`DSH_ASSISTANT_LEDGER` overrides the path). Legacy daily totals remain readable; previously missed retries and cache writes cannot be recovered from aggregates. Diagnostics are off by default; `DSH_ASSISTANT_DEBUG=1` logs to the host stream instead of the installation directory.
 
-The host stores counts and prices in `$DSH_HOME/assistant-suite/usage-ledger.json`; set `DSH_ASSISTANT_LEDGER` to use another path. This local host file is not synced to the browser or included in the plugin package.
+![Tokens and cost card](docs/screenshots/token-cost-card.png)
+
+![Provider and model prices](docs/screenshots/token-cost-pricing.png)
 
 ### Custom usage templates
 
 A service outside the built-in adapters can describe its usage endpoint with a template. There are two places to put one:
 
-- **Settings page (recommended, editable any time)**: open **Settings → Assistant Suite → Custom usage templates** and fill one in per provider that already has a key. Templates saved there stay in the current browser, travel with that provider's query, and win over the provider-configuration template.
+- **Settings page (recommended, editable any time)**: open **Settings → DSH Helper → Custom usage templates** and fill one in per provider that already has a key. Templates saved there stay in the current browser, travel with that provider's query, and win over the provider-configuration template.
 - **Provider configuration (shipped with the config)**: for example `llm-pi-ai.providers.<id>.usageTemplate`; the host picks it up after a reload.
 
 #### Steps
@@ -199,7 +216,7 @@ Open the chart for a larger view. Select a date range, including a custom start 
 
 ## Notifications and display settings
 
-Open **Settings → Assistant Suite** to manage system notifications, test notification delivery, and choose optional sections in the usage panel. The balance and quota section is always shown; **Balance next to the usage button** defaults to on, and **Provider and balance at the sidebar bottom** defaults to off.
+Open **Settings → DSH Helper** to manage notification permission and delivery, choose usage panel sections, and configure custom usage templates per provider. The balance and quota section is always shown; the header balance defaults to on and the sidebar balance defaults to off. In dark mode, enabled notification and display switches use a near-white track and near-black thumb; disabled fixed options are dimmed. The primary save action stays prominent.
 
 | Event | Notification |
 | --- | --- |
@@ -210,17 +227,21 @@ Open **Settings → Assistant Suite** to manage system notifications, test notif
 
 When an approval or question is handled, its notification is dismissed. Subagent sessions do not send separate notifications. Notifications are suppressed while the page is focused on the same conversation. Click **Test** to grant permission when needed and verify delivery. Test notifications only check delivery and window focus; they do not open a conversation.
 
-![Assistant Suite settings for notifications and usage panel display](docs/screenshots/settings-dark-desktop.png)
+![DSH Helper dark settings page with notifications, display switches, and template editor](docs/screenshots/dsh-helper-settings-dark.png)
+
+![DSH Helper light settings page with notification controls and provider templates](docs/screenshots/dsh-helper-settings-light.png)
+
+![DSH Helper settings page arranged for a narrow screen](docs/screenshots/dsh-helper-settings-mobile.png)
 
 ## Data and permissions
 
 Provider queries run in the host process. The browser receives normalized usage, the credential reference name, and the data source; credential values stay in the host. Queries access the corresponding provider API. Notifications use a local host route, which checks browser request trust through the host connection service.
 
-Refresh preferences, manual query target, history, and display settings are stored in browser `localStorage` and scoped to the browser profile and site origin. Notifications use committed session events and do not modify session content. Token statistics accumulate the usage of `assistant/message` events in the host and are written to `$DSH_HOME/assistant-suite/usage-ledger.json` (`DSH_ASSISTANT_LEDGER` overrides the path); only requests that happen after the plugin is enabled are counted, and the price table lives in that same file. The host notification module also writes local loading and window-focus diagnostics to `lib/dsh-reminding-debug.log`; this log is not included in the npm package.
+Refresh preferences, manual query target, history, and display settings are stored in browser `localStorage` and scoped to the browser profile and site origin. Notifications use committed session events and do not modify session content. Token statistics accumulate the usage of `assistant/message` events in the host and are written to `$DSH_HOME/assistant-suite/usage-ledger.json` (`DSH_ASSISTANT_LEDGER` overrides the path); only requests that happen after the plugin is enabled are counted, and the price table lives in that same file. Diagnostic logging is disabled by default; enable host-stream diagnostics with `DSH_ASSISTANT_DEBUG=1`.
 
 ## Troubleshooting
 
-**Usage or Assistant Suite settings are missing.** Confirm that the suite is enabled and reload the interface. If the usage entry was hidden in display settings, enable it again.
+**Usage or DSH Helper settings are missing.** Confirm that `dsh-helper` is enabled and reload the interface. If the usage entry was hidden in display settings, enable it again.
 
 **Notifications do not appear.** Check the suite notification switch and permission, use **Test**, then check operating-system notification permissions, banners, and Do Not Disturb settings. A browser also needs an origin where notification permission can be granted.
 
@@ -228,7 +249,7 @@ Refresh preferences, manual query target, history, and display settings are stor
 
 **No history is visible.** History currently supports Command Code and needs time to collect samples. Data is not synchronized when changing browser profiles, site origins, or after clearing site data.
 
-**Duplicate usage entries or notifications appear.** Disable the standalone `dsh-model-usage` and `dsh-reminding` plugins, and check for other plugins that provide the same notifications.
+**Duplicate usage entries or notifications appear.** Confirm only `dsh-helper` is enabled for these features, and check for other plugins with equivalent notifications.
 
 ## Development and publishing
 
@@ -257,4 +278,4 @@ This project is licensed under the [MIT License](LICENSE), Copyright © 2026 liu
 
 - [GitHub repository](https://github.com/liuchaoxu/dsh-assistant-suite)
 - [Report an issue](https://github.com/liuchaoxu/dsh-assistant-suite/issues)
-- [npm package](https://www.npmjs.com/package/dsh-assistant-suite)
+- [npm package](https://www.npmjs.com/package/dsh-helper)

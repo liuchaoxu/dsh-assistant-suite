@@ -29,7 +29,7 @@ const React = {
   useEffect() {},
 }
 runInNewContext(source, { window, localStorage, document })
-assert.equal(definition.id, 'dsh-assistant-suite')
+assert.equal(definition.id, 'dsh-helper')
 const plugin = definition.factory((name) => {
   if (name === 'react') return React
   if (name === 'react-dom') return { createPortal: (children, container) => ({ type: 'portal', props: { container }, children: [children] }) }
@@ -105,9 +105,25 @@ assert.equal(tickerRegistration.component({ ...tickerProps, wide: false }), null
 assert.equal(tickerRegistration.component({ ...tickerProps, wide: true }), null, 'no conversation route yet, so nothing to show')
 assert.equal(registrations[3].options.id, 'assistant-suite')
 assert.equal(registrations[3].options.order, 30)
-assert.equal(registrations[3].options.label(), '助手套件')
+assert.equal(registrations[3].options.label(), 'DSH 助手')
 assert.equal(registrations[3].options.children['assistant-suite.usage-settings'].kind, 'single')
 assert.equal(typeof registrations[3].component, 'function')
+
+// Cold settings entry owns every shared control style without a header mount.
+const cssOf = (tree) => visit(tree).filter(node => node.type === 'style').map(node => node.props.dangerouslySetInnerHTML?.__html ?? '').join('\n')
+const coldCss = cssOf(displayTree)
+for (const selector of ['.dsh-usage-action {', '.dsh-usage-action-primary {', '.dsh-usage-chip {', '.dsh-usage-provider-meta {', '.dsh-usage-display-toggles > label']) assert.ok(coldCss.includes(selector),selector)
+assert.equal(coldCss.includes('.dsh-usage-display-settings label'),false,'template labels must not inherit switch-row layout')
+assert.equal(coldCss.includes('.dsh-usage-display-settings input {'),false)
+assert.ok(checkboxes.every(node=>node.props.role==='switch'))
+for (let i=0;i<3;i++) assert.equal(cssOf(registrations[0].component({t:key=>key,fetchProviders:fetchProvidersStub,testTemplate:testTemplateStub})),coldCss,'remounts own identical styles')
+const reminderTree = registrations[3].component({t:key=>key})
+assert.ok(coldCss.includes('input[type=checkbox]:checked::after { background: var(--dsw-alias-bg-base)'))
+assert.ok(cssOf(reminderTree).includes('.dsh-reminding-page .dsh-reminding-test'))
+assert.ok(cssOf(reminderTree).includes('body[data-ds-dark-theme] .dsh-reminding-page .dsh-reminding-switch.is-on .dsh-reminding-knob { background: var(--dsw-alias-bg-base)'))
+assert.ok(cssOf(reminderTree).includes('body[data-ds-dark-theme] .dsh-reminding-page .dsh-reminding-switch.is-on { background: var(--dsw-alias-label-primary)' ))
+assert.ok(cssOf(reminderTree).includes('.dsh-reminding-page .dsh-reminding-switch.is-on .dsh-reminding-knob { background: var(--dsw-alias-switch-thumb'))
+assert.ok(visit(reminderTree).some(node=>node.type==='button' && node.props.className==='dsh-reminding-test' && node.props.disabled===false))
 
 // The manual refresh action belongs beside the timestamp and retains its
 // accessible name when rendered without visible text.
@@ -190,4 +206,16 @@ assert.equal(templateEntry.props.testTemplate, testTemplateStub)
 const templatesTree = templateEntry.type(templateEntry.props)
 assert.ok(visit(templatesTree).some((node) => Array.isArray(node.children) && node.children.includes('templates.section')))
 assert.equal(visit(templatesTree).some((node) => node.type === 'textarea'), false)
+// Trend and ledger share calendar boundaries, and cache-write prices affect cost.
+const noon = new Date(2026, 10, 10, 12).getTime()
+const today = plugin.__test.historyWindow('today', {}, noon)
+assert.equal(today.start, new Date(2026, 10, 10).getTime())
+assert.equal(today.end, new Date(2026, 10, 11).getTime())
+const custom = plugin.__test.ledgerScope('alpha', 'custom', {start:'2026-11-01',end:'2026-11-05'}, noon)
+assert.equal(custom.provider,'alpha');assert.equal(custom.start,'2026-11-01');assert.equal(custom.end,'2026-11-06')
+assert.equal(plugin.__test.ledgerScope('alpha','week',{},noon).start,'2026-11-04')
+assert.equal(plugin.__test.ledgerScope('alpha','month',{},noon).start,'2026-10-12')
+const price=plugin.__test.priceEntry({'alpha/model':{input:1,output:2,cacheRead:3,cacheWrite:4}},'alpha','model')
+assert.ok(Math.abs(plugin.__test.tokenCost({input:100,output:20,cacheRead:30,cacheWrite:40},price)-0.00039)<1e-12)
+
 console.log('Client test passed: usage control and reminder settings mount together.')

@@ -1,16 +1,29 @@
-# DSH Assistant Suite · 助手套件
+# DSH Helper
 
 [English](README.en.md) | 中文
 
-[![npm version](https://img.shields.io/npm/v/dsh-assistant-suite.svg)](https://www.npmjs.com/package/dsh-assistant-suite)
+[![npm version](https://img.shields.io/npm/v/dsh-helper.svg)](https://www.npmjs.com/package/dsh-helper)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-43853d.svg)](https://nodejs.org/)
 
-为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 提供**模型供应商用量查询、余额消耗趋势和系统提醒**。将 `dsh-model-usage` 与 `dsh-reminding` 合并为一个插件，在会话头部查看用量，在 **设置 → 助手套件** 统一管理通知和面板显示。
+为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 提供**供应商用量查询、余额趋势、Token 成本估算和系统提醒**。使用唯一插件 **`dsh-helper`**，在会话头部查看账户状态，在 **设置 → DSH 助手** 管理通知、显示项和第三方用量模板。
 
-当前版本：`0.2.0`。支持深浅色主题、磨砂玻璃面板和窄屏布局，中英文随应用语言切换。本文截图使用示例数据展示界面，余额、额度与通知权限状态不代表实际账户情况。
+当前版本：`0.2.0`。支持深浅色主题和窄屏布局，中英文随应用语言切换。设置页新截图由当前插件组件在浏览器中渲染，使用示例供应商，属于界面预览而非 DSH 宿主内实拍。其余截图包含早期界面和用户提供的实拍，金额仅用于说明功能。
 
 ![深色用量面板：套餐额度、信用余额和余额消耗趋势](docs/screenshots/usage-dark-desktop.png)
+
+
+## 一眼了解 dsh-helper
+
+| 你想做什么 | 使用入口与结果 |
+| --- | --- |
+| 随时查看账户余额 | 会话头部「用量」显示余额，悬停查看摘要，点击展开额度与详情。 |
+| 了解余额如何变化 | Command Code 余额趋势按十分钟采样，支持日期范围、放大查看和清理记录。 |
+| 对比 Token 成本与消耗 | 按供应商/共享凭据及相同日期范围比较估算成本、余额采样消耗和差额。 |
+| 接入其他服务 | 设置页选择预设或粘贴 cc-switch 模板，预览请求，测试通过后保存。 |
+| 不错过需要处理的对话 | 授权、提问、完成及失败时发送系统提醒，点击返回对应会话。 |
+
+开始使用：安装并启用 **`dsh-helper`** → 重新加载界面 → 打开会话「用量」→ 在 **设置 → DSH 助手** 测试通知并选择显示内容。
 
 ## 功能
 
@@ -39,7 +52,7 @@
 
 ### 插件页面
 
-在 DSH 的 **Plugins / 插件** 页面安装 `dsh-assistant-suite` 并启用。npm 包发布后可按包名安装；本地开发可通过插件管理工具的 `install_bundle` 将目标指向项目目录。
+在 DSH 的 **Plugins / 插件** 页面安装 `dsh-helper` 并启用。npm 包发布后可按包名安装；本地开发可通过插件管理工具的 `install_bundle` 将目标指向项目目录。
 
 安装后重新加载界面。若宿主未启用热更新，重启应用以加载主机端代码。桌面应用管理的 profile 请通过插件页面安装和启用。
 
@@ -48,20 +61,22 @@
 对于允许 CLI 管理的 profile：
 
 ```sh
-dsh plugin --profile <profile> add dsh-assistant-suite
+dsh plugin --profile <profile> add dsh-helper
 ```
 
 本地目录安装：
 
 ```sh
-dsh plugin --profile <profile> add link:/absolute/path/to/dsh-assistant-suite
+dsh plugin --profile <profile> add link:/absolute/path/to/dsh-helper
 ```
 
 安装后在插件页面确认已启用。单独执行 `npm install` 只下载 npm 包，不会自动在 DSH 中启用插件。
 
-### 从旧插件迁移
+### 从旧版本升级
 
-安装并启用本套件后，停用原来的 `dsh-model-usage` 和 `dsh-reminding`，避免重复的用量入口、提醒及相同路由注册。套件保留旧功能的本地存储键；在相同浏览器配置及站点来源下，原有刷新设置、查询对象、历史记录和提醒开关可继续读取。用量显示选项使用套件独立的存储键。
+旧包名 `dsh-assistant-suite` 已更名为 `dsh-helper`。升级时先停用旧包，再安装并启用新包，避免重复注册路由。浏览器偏好和本地 Token 账本路径保持不变，无需手工搬迁数据。
+
+安装并启用 `dsh-helper` 前，停用旧版的 `dsh-model-usage` 和 `dsh-reminding`，避免重复的用量入口、提醒及相同路由注册。套件保留旧功能的本地存储键；在相同浏览器配置及站点来源下，原有刷新设置、查询对象、历史记录和提醒开关可继续读取。用量显示选项使用套件独立的存储键。
 
 ## 查看供应商用量
 
@@ -90,7 +105,7 @@ dsh plugin --profile <profile> add link:/absolute/path/to/dsh-assistant-suite
 
 内置适配之外的服务，可以给它的用量接口写一个模板。两种放置方式：
 
-- **设置页（推荐，随时改）**：打开 **设置 → 助手套件 → 第三方用量模板**，为每个已配置密钥的供应商单独填写。模板只存在当前浏览器，查询该供应商时随请求发给宿主，优先于供应商配置里的模板。
+- **设置页（推荐，随时改）**：打开 **设置 → DSH 助手 → 第三方用量模板**，为每个已配置密钥的供应商单独填写。模板只存在当前浏览器，查询该供应商时随请求发给宿主，优先于供应商配置里的模板。
 - **供应商配置（可随配置分发）**：写在供应商配置下，例如 `llm-pi-ai.providers.<id>.usageTemplate`，保存后重新加载宿主生效。
 
 #### 配置步骤
@@ -200,11 +215,13 @@ usageTemplate:
 
 ## 系统提醒与显示设置
 
-打开 **设置 → 助手套件**。上方管理系统通知与测试，下方选择用量弹框的显示内容。**余额与额度** 是固定保留的核心内容，其余项目可按需显示或隐藏；**用量按钮旁显示余额** 默认开启，**左下角显示供应商与余额** 默认关闭。
+打开 **设置 → DSH 助手**。页面分为系统提醒、用量显示和第三方用量模板三部分：可切换提醒、检查通知权限并发送测试通知；选择会话头部和用量面板显示的内容；按供应商编辑、测试和保存用量接口模板。**余额与额度** 始终显示，头部余额默认开启，侧栏供应商余额默认关闭。深色主题下，通知和显示选项的开启状态统一使用近白轨道和近黑滑块；关闭为暗色轨道，固定选项则降低透明度。保存模板保留醒目的主操作样式。
 
-![深色助手套件设置：系统通知、权限测试与用量面板显示开关](docs/screenshots/settings-dark-desktop.png)
+![DSH 助手深色设置页：通知开关、显示选项与模板编辑器](docs/screenshots/dsh-helper-settings-dark.png)
 
-![浅色助手套件设置：通知权限与可选显示内容](docs/screenshots/settings-light-desktop.png)
+![DSH 助手浅色设置页：清晰的开关状态与模板配置](docs/screenshots/dsh-helper-settings-light.png)
+
+![DSH 助手窄屏设置页：通知、显示选项和模板编辑布局](docs/screenshots/dsh-helper-settings-mobile.png)
 
 | 提醒时机 | 行为 |
 | --- | --- |
@@ -219,39 +236,55 @@ usageTemplate:
 
 ## Token 用量与费用
 
-插件启用后在宿主侧累计 `assistant/message` 事件中的输入、输出、缓存读取 Token 数及请求数，按日期、供应商和模型汇总，提供最近 30 天的明细。此统计不会回溯启用前的请求，也不会把不同供应商的同名模型合并计价。
+Token 卡片跟随当前查询供应商，包含已确认使用同一 API 来源与凭据引用的路由，按模型分别计价。Command Code 下，与余额趋势共用「今天、昨天、近一周、近一月、自定义」日期范围；其他供应商显示当前供应商近 30 天用量。日期按本地自然日处理，结束日期包含当天。
 
-在用量面板的 **Token 与费用** 区域，可按供应商/模型填写输入、输出和缓存读取单价（每百万 Token），也可填入 DeepSeek 参考单价。费用按当前价格即时计算；历史请求使用当前配置的单价重新估算。清空单价后仍保留 Token 统计，但不显示费用。
+统计包含输入、输出、缓存读取和缓存写入 Token。一次尝试的最终用量会替换已有样本，重试开始后按新的计费尝试累计，重复事件不会重复计数。在「设置单价」中填写每百万 Token 的美元价格；参考价只用于起步，缓存写入价格需按实际账单填写。修改单价会重算历史估算成本，缺少单价时会提示比较不完整。
 
-统计和价格表保存在 `$DSH_HOME/assistant-suite/usage-ledger.json`；可用 `DSH_ASSISTANT_LEDGER` 指定文件路径。该文件属于本机宿主数据，不会同步到浏览器或随插件包发布。
+同一日期范围内并列展示「估算成本」「余额采样消耗」及两者差额。余额趋势取两次余额采样的正向差值，可能包含其他客户端消费、充值和采样边界误差；Token 成本仅覆盖本机启用插件后记录到的事件，因此两者不保证数值相等。统计在面板打开时定期更新，并随手动刷新更新。
 
-![Token 与费用卡片：近 30 天请求和 Token 汇总、按模型展示费用](docs/screenshots/token-cost-card.png)
+更名为 `dsh-helper` 后，仍读取原有浏览器设置及 `$DSH_HOME/assistant-suite/usage-ledger.json`；`DSH_ASSISTANT_LEDGER` 可指定其他路径。旧版日汇总会保留，但此前漏记的重试和缓存写入无法凭汇总文件补齐。系统诊断默认关闭，设置 `DSH_ASSISTANT_DEBUG=1` 后输出到宿主日志，不再向插件安装目录写日志。
+
+![Token 与费用卡片示例：请求和 Token 汇总、按模型展示费用](docs/screenshots/token-cost-card.png)
 
 ![单价设置：按供应商和模型填写输入、输出及缓存读取价格](docs/screenshots/token-cost-pricing.png)
 
 ## 窄屏与矮窗口
 
-下面的截图分别展示窄屏用量、设置和趋势视图，以及矮窗口下可滚动的趋势布局。
+用量、设置和趋势面板会在窄屏下调整控件排列；长模板编辑区可滚动，按钮会换行显示。
 
 | 窄屏用量 | 窄屏设置 |
 | --- | --- |
-| ![窄屏用量面板：刷新图标、查询对象与额度卡片](docs/screenshots/usage-dark-mobile.png) | ![窄屏助手套件设置：通知与显示选项](docs/screenshots/settings-dark-mobile.png) |
+| ![窄屏用量面板：刷新图标、查询对象与额度卡片](docs/screenshots/usage-dark-mobile.png) | ![DSH Helper 窄屏设置](docs/screenshots/dsh-helper-settings-mobile.png) |
 
 ![窄屏余额消耗趋势：日期控件自动换行](docs/screenshots/balance-history-dark-mobile.png)
 
 ![矮窗口余额消耗趋势：内容可滚动，图表底部可完整查看](docs/screenshots/balance-history-dark-short-window.png)
 
+
+<details>
+<summary>早期设置界面参考（旧布局）</summary>
+
+以下截图保留用于对照早期界面；当前设置页以本节上方的 DSH Helper 截图为准。
+
+![早期深色设置界面](docs/screenshots/settings-dark-desktop.png)
+
+![早期浅色设置界面](docs/screenshots/settings-light-desktop.png)
+
+![早期窄屏设置界面](docs/screenshots/settings-dark-mobile.png)
+
+</details>
+
 ## 数据与权限
 
 供应商查询在宿主进程执行，浏览器接收归一化用量、凭据引用名和来源，不接收密钥值。查询会访问相应供应商 API；提醒通过宿主本地路由传递。相关路由使用宿主连接服务检查浏览器请求的信任状态。
 
-刷新策略、手动查询对象、历史记录和显示开关保存在浏览器 `localStorage`，按浏览器配置及站点来源隔离。提醒根据已提交的会话事件生成，不修改会话内容。当前主机端提醒模块还会在 `lib/dsh-reminding-debug.log` 写入本地加载与窗口聚焦诊断信息，该日志不包含在 npm 发布包内。
+刷新策略、手动查询对象、历史记录和显示开关保存在浏览器 `localStorage`，按浏览器配置及站点来源隔离。提醒根据已提交的会话事件生成，不修改会话内容。系统诊断默认关闭，可通过 `DSH_ASSISTANT_DEBUG=1` 启用宿主日志。
 
 ## 常见问题
 
-**没有用量入口或助手套件设置？** 确认插件已启用并重新加载界面；如果在显示设置中隐藏了用量入口，重新开启即可。
+**没有用量入口或 DSH 助手设置？** 确认插件已启用并重新加载界面；如果在显示设置中隐藏了用量入口，重新开启即可。
 
-**收不到通知？** 先在助手套件设置中检查通知开关和权限，点击测试；再检查操作系统对 DSH 或浏览器的通知权限、横幅设置和勿扰模式。浏览器还需要可授予通知权限的站点环境。
+**收不到通知？** 先在 DSH 助手设置中检查通知开关和权限，点击测试；再检查操作系统对 DSH 或浏览器的通知权限、横幅设置和勿扰模式。浏览器还需要可授予通知权限的站点环境。
 
 **余额查询失败？** 检查查询对象，以及 **设置 → 模型** 中对应供应商的凭据与地址。并非每个 OpenAI 兼容服务都提供账户用量接口；失败时查看面板中的具体错误。
 
@@ -298,11 +331,11 @@ npm publish
 
 ## English
 
-DSH Assistant Suite combines provider-account usage and system reminders for DeepSeek Harness. Open **Usage** in a conversation header to inspect balances and quota windows, refresh beside the updated time, or select a different query target without changing the conversation model. Command Code spending history supports custom dates and a larger scrollable chart dialog.
+DSH Helper combines provider-account usage and system reminders for DeepSeek Harness. Open **Usage** in a conversation header to inspect balances and quota windows, refresh beside the updated time, or select a different query target without changing the conversation model. Command Code spending history supports custom dates and a larger scrollable chart dialog.
 
-Manage notification permissions, test notifications, and choose visible panel sections under **Settings → Assistant Suite**. Real notifications return to their conversation; test notifications only test delivery and focus. The interface follows the host's language and light/dark appearance. Screenshots above use sample data.
+Manage notification permissions, test notifications, and choose visible panel sections under **Settings → DSH Helper**. Real notifications return to their conversation; test notifications only test delivery and focus. The interface follows the host's language and light/dark appearance. Settings previews above are rendered from the current plugin components with sample data; earlier captures are labelled.
 
-Requires DeepSeek Harness `>=0.2.1-rc.2` and Node.js `>=18`. Install `dsh-assistant-suite` from the DSH plugin page once published, or use the CLI command above for a CLI-managed profile. Disable the standalone `dsh-model-usage` and `dsh-reminding` plugins when using the suite. No runtime npm dependencies are required; DSH supplies React and React DOM. Run `npm run verify` before publishing.
+Requires DeepSeek Harness `>=0.2.1-rc.2` and Node.js `>=18`. Install `dsh-helper` from the DSH plugin page once published, or use the CLI command above for a CLI-managed profile. Disable the standalone `dsh-model-usage` and `dsh-reminding` plugins when using the suite. No runtime npm dependencies are required; DSH supplies React and React DOM. Run `npm run verify` before publishing.
 
 ## 协议与链接
 
@@ -310,4 +343,4 @@ Requires DeepSeek Harness `>=0.2.1-rc.2` and Node.js `>=18`. Install `dsh-assist
 
 - [GitHub 仓库](https://github.com/liuchaoxu/dsh-assistant-suite)
 - [反馈问题](https://github.com/liuchaoxu/dsh-assistant-suite/issues)
-- [npm 包页面](https://www.npmjs.com/package/dsh-assistant-suite)（发布后可用）
+- [npm 包页面](https://www.npmjs.com/package/dsh-helper)（发布后可用）

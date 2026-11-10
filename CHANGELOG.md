@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+- Match the dark switch reference: near-white enabled track with a near-black thumb.
+- Use white-gray enabled notification and display switches in dark mode, and document the renamed `dsh-helper` settings page with fresh dark, light, and narrow-screen previews.
+- Make settings own shared button/text styles on first entry instead of depending on the conversation header; scope switch rules to display rows so template labels remain unaffected.
+- Refine settings cards, button variants, keyboard focus, narrow layouts and notification/test busy states.
+- Rename the package and client module to `dsh-helper` (DSH Helper / DSH 助手), retaining existing browser settings and ledger storage paths. Disable the old package before enabling the renamed package to avoid duplicate routes.
+- Fail closed when request admission is unavailable; bound JSON request bodies to 256 KiB and return HTTP 413 for oversized requests.
+- Scope ledger state to each plugin activation, reload existing data on activation, preserve v1 aggregates, and commit prices before reporting a successful save.
+- Count retry attempts, replace repeated settlement samples, and account for cache-write tokens and prices.
+- Align token costs with the current provider/shared-credential routes and the balance trend's local-calendar date range; display sampled spend and the difference without equating estimated cost with real billing.
+- Refresh the ledger with the usage panel, prevent late responses from crossing scopes, and make diagnostics opt-in through `DSH_ASSISTANT_DEBUG=1`.
+
 ## 0.2.0
 - Add a host-side session usage ledger: `assistant/message` usage (input, output, cache read, total tokens and requests) is folded per day/provider/model into `$DSH_HOME/assistant-suite/usage-ledger.json`, with duplicate sequence numbers ignored.
 - Add a **Tokens and cost** card to the usage panel showing the last 30 days, per-model rows, and a structured price editor keyed by provider/model: three fields per route, a DeepSeek reference-rate preset, clear-all, and live per-route/total cost preview. Legacy model-only price keys still apply as a fallback.

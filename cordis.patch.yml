@@ -1,4 +1,4 @@
 - insert:
-    - id: assistant-suite
-      name: 'dsh-assistant-suite'
+    - id: dsh-helper
+      name: 'dsh-helper'
       config: {}

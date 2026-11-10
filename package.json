@@ -1,5 +1,5 @@
 {
-  "name": "dsh-assistant-suite",
+  "name": "dsh-helper",
   "version": "0.2.0",
   "description": "Assistant suite for DeepSeek Harness: provider usage and spend history, plus reminders for approvals, questions and finished turns.",
   "license": "MIT",
@@ -16,6 +16,7 @@
   },
   "files": [
     "lib/index.js",
+    "lib/http.js",
     "lib/model-usage.js",
     "lib/reminding.js",
     "lib/usage-ledger.js",
@@ -41,11 +42,12 @@
     "check": "node scripts/check.mjs",
     "test:host": "node scripts/test-host.mjs",
     "test:client": "node scripts/test-client.mjs",
-    "test": "npm run build:client && npm run check && npm run test:host && npm run test:client",
+    "test": "npm run build:client && npm run check && npm run test:host && npm run test:client && npm run test:regressions",
     "verify": "npm test && npm run pack:check",
     "pack:check": "npm pack --dry-run",
     "prepack": "npm run build:client && npm run check",
-    "prepublishOnly": "npm test"
+    "prepublishOnly": "npm test",
+    "test:regressions": "node scripts/test-regressions.mjs"
   },
   "dsh": {
     "manifestVersion": 1,
