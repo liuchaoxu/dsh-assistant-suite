@@ -1,7 +1,7 @@
 {
-  "name": "dsh-helper",
-  "version": "0.2.0",
-  "description": "Assistant suite for DeepSeek Harness: provider usage and spend history, plus reminders for approvals, questions and finished turns.",
+  "name": "@liucxu/dsh-helper",
+  "version": "0.2.1",
+  "description": "DeepSeek Harness plugin for provider balances, token usage and cost estimates, plus desktop notifications for approvals, questions and completed turns.",
   "license": "MIT",
   "author": "liuchaoxu <ischaoxu@163.com>",
   "type": "module",
@@ -31,7 +31,9 @@
     "README.md",
     "README.en.md",
     "CHANGELOG.md",
-    "LICENSE"
+    "LICENSE",
+    "docs/BRAND.md",
+    "docs/PUBLISHING.md"
   ],
   "engines": {
     "node": ">=18",
@@ -44,10 +46,11 @@
     "test:client": "node scripts/test-client.mjs",
     "test": "npm run build:client && npm run check && npm run test:host && npm run test:client && npm run test:regressions",
     "verify": "npm test && npm run pack:check",
-    "pack:check": "npm pack --dry-run",
+    "pack:check": "npm run build:client && npm run check && node scripts/check-pack.mjs",
     "prepack": "npm run build:client && npm run check",
     "prepublishOnly": "npm test",
-    "test:regressions": "node scripts/test-regressions.mjs"
+    "test:regressions": "node scripts/test-regressions.mjs",
+    "release:prepare": "node scripts/prepare-release.mjs"
   },
   "dsh": {
     "manifestVersion": 1,
@@ -80,26 +83,31 @@
     "url": "https://github.com/liuchaoxu/dsh-assistant-suite/issues"
   },
   "keywords": [
+    "dsh-helper",
     "dsh",
     "dsh-plugin",
     "deepseek",
     "deepseek-harness",
     "cordis",
     "cordis-plugin",
-    "assistant",
     "llm",
-    "usage",
+    "token-usage",
+    "token-tracking",
+    "cost-tracking",
+    "api-usage",
+    "api-balance",
     "quota",
-    "billing",
     "balance",
     "spending-history",
-    "notification",
+    "desktop-notifications",
     "reminder",
     "commandcode",
     "openrouter",
     "moonshot",
+    "kimi",
     "siliconflow",
-    "new-api"
+    "new-api",
+    "cc-switch"
   ],
   "publishConfig": {
     "access": "public",

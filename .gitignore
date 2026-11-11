@@ -31,3 +31,6 @@ Thumbs.db
 
 # DSH local state
 .dsh/
+
+# Verified release artifacts
+release/

@@ -13,7 +13,7 @@ const usage = extract(read('lib/model-usage.client.js'), 'factory: (require) => 
 const reminders = extract(read('lib/reminding.client.js'), 'factory(require) {', NL + '  },' + NL + '})', 'reminding.client.js')
 const output = [
   '// Generated from both preserved feature client factories. Run npm run build:client after changing either source.',
-  'window.__ModuleLoader__.load({', '  id: "dsh-helper",', '  factory: (require) => {',
+  'window.__ModuleLoader__.load({', '  id: "@liucxu/dsh-helper",', '  factory: (require) => {',
   '    const module = { exports: {} };', '    const exports = module.exports;',
   '    Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });',
   '    const modelUsage = ((require) => {' + usage + NL + '    })(require);',

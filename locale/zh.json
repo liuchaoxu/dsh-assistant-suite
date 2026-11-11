@@ -1,1 +1,6 @@
-{"meta": {"title": "DSH 助手", "description": "查看模型供应商用量，在需要授权、模型提问或回复完成时收到系统提醒。"}}
+{
+  "meta": {
+    "title": "DSH 助手",
+    "description": "DeepSeek Harness 用量、成本与提醒插件：查看供应商余额和额度、估算 Token 费用，接收授权、提问和完成通知。"
+  }
+}

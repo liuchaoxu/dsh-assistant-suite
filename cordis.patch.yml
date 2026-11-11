@@ -1,4 +1,4 @@
 - insert:
     - id: dsh-helper
-      name: 'dsh-helper'
+      name: '@liucxu/dsh-helper'
       config: {}

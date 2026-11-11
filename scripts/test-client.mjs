@@ -29,7 +29,7 @@ const React = {
   useEffect() {},
 }
 runInNewContext(source, { window, localStorage, document })
-assert.equal(definition.id, 'dsh-helper')
+assert.equal(definition.id, '@liucxu/dsh-helper')
 const plugin = definition.factory((name) => {
   if (name === 'react') return React
   if (name === 'react-dom') return { createPortal: (children, container) => ({ type: 'portal', props: { container }, children: [children] }) }

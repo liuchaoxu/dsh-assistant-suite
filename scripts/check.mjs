@@ -6,7 +6,7 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const read = (file) => readFileSync(join(root, file), 'utf8')
 const pkg = JSON.parse(read('package.json')), patch = read('cordis.patch.yml')
 const client = read('lib/client.js'), host = read('lib/index.js')
-assert.equal(pkg.name, 'dsh-helper')
+assert.equal(pkg.name, '@liucxu/dsh-helper')
 assert.notEqual(pkg.private, true, 'the package must allow npm publication')
 assert.match(pkg.version, /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/)
 assert.equal(pkg.license, 'MIT')
@@ -50,16 +50,33 @@ for (const key of ['.', './client', './cordis.patch.yml', './locale/*.json', './
   assert.equal(typeof pkg.exports[key], 'string', `missing export: ${key}`)
   if (key !== './package.json') assert.ok(shipped(pkg.exports[key].slice(2)), `export must be shipped: ${key}`)
 }
-const readme = read('README.md')
 const referencedImages = new Set()
-for (const [, alt, src] of readme.matchAll(/!\[([^\]]*)\]\(([^)\s]+)\)/g)) {
-  assert.ok(alt.trim(), `image needs alt text: ${src}`)
-  if (/^https:\/\//.test(src)) continue
-  const bytes = readFileSync(join(root, src))
-  assert.ok(shipped(src), `README screenshot must be included in npm package: ${src}`)
-  assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', `invalid PNG: ${src}`)
-  assert.ok(bytes.length <= 2 * 1024 * 1024, `screenshot exceeds 2 MiB: ${src}`)
-  referencedImages.add(src)
+for (const document of ['README.md', 'README.en.md']) {
+  const readme = read(document)
+  const images = [...readme.matchAll(/!\[([^\]]*)\]\(([^)\s]+)\)/g)].map(([, alt, src]) => [alt, src])
+  for (const [, tag] of readme.matchAll(/(<img\b[^>]*>)/g)) {
+    images.push([tag.match(/alt="([^"]*)"/)?.[1] ?? '', tag.match(/src="([^"]*)"/)?.[1] ?? ''])
+  }
+  for (const [alt, src] of images) {
+    assert.ok(alt.trim(), `image needs alt text: ${src}`)
+    if (/^https:\/\//.test(src)) continue
+    const bytes = readFileSync(join(root, src))
+    assert.ok(shipped(src), `README screenshot must be included in npm package: ${src}`)
+    if (src.endsWith('.svg')) {
+      assert.match(bytes.toString(), /<svg\b/)
+      assert.match(bytes.toString(), /<title[^>]*>DSH Helper<\/title>/)
+      assert.doesNotMatch(bytes.toString(), /<script\b|<foreignObject\b|(?:href|src)\s*=/i)
+    } else {
+      assert.equal(bytes.subarray(0, 8).toString('hex'), '89504e470d0a1a0a', `invalid PNG: ${src}`)
+    }
+    assert.ok(bytes.length <= 2 * 1024 * 1024, `screenshot exceeds 2 MiB: ${src}`)
+    if (src.startsWith('docs/screenshots/')) referencedImages.add(src)
+  }
+  for (const [, target] of readme.matchAll(/(?<!!)\[[^\]]+\]\(([^)\s]+)\)/g)) {
+    if (/^(?:https?:|#)/.test(target)) continue
+    read(target.split('#')[0])
+    assert.ok(shipped(target.split('#')[0]), `README link must be shipped: ${target}`)
+  }
 }
 for (const file of readdirSync(join(root, 'docs/screenshots'))) {
   assert.match(file, /^[a-z0-9]+(?:-[a-z0-9]+)*\.png$/)
@@ -72,8 +89,8 @@ assert.ok(pkg.dsh.client.inject.includes('@deepseek-ai/dsh-client-connection'))
 assert.ok(pkg.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-conversation'))
 assert.ok(pkg.dsh.client.inject.includes('@deepseek-ai/dsh-client-ui-settings'))
 assert.match(patch, /id:\s*dsh-helper/)
-assert.match(patch, /name:\s*['"]dsh-helper['"]?/)
-assert.match(client, /id:\s*["']dsh-helper["']/)
+assert.match(patch, /name:\s*['"]@liucxu\/dsh-helper['"]?/)
+assert.match(client, /id:\s*["']@liucxu\/dsh-helper["']/)
 assert.match(client, /const modelUsage =/)
 assert.match(client, /const reminding =/)
 assert.match(host, /applyModelUsage\(ctx\)/)

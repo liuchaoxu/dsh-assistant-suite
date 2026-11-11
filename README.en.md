@@ -1,19 +1,37 @@
-# DSH Helper
+<p align="center"><img src="icon.svg" width="96" height="96" alt="DSH Helper: silver H, blue usage bridge, amber notification dot"></p>
+
+# DSH Helper — Usage, cost & reminders for DeepSeek Harness
 
 [中文说明](README.md) | English
 
-[![npm version](https://img.shields.io/npm/v/dsh-helper.svg)](https://www.npmjs.com/package/dsh-helper)
+[![npm version](https://img.shields.io/npm/v/@liucxu/dsh-helper.svg)](https://www.npmjs.com/package/@liucxu/dsh-helper)
+[![npm downloads](https://img.shields.io/npm/dm/@liucxu/dsh-helper.svg)](https://www.npmjs.com/package/@liucxu/dsh-helper)
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-43853d.svg)](https://nodejs.org/)
 
-Version `0.2.0` combines provider usage queries, balance history, token and cost tracking, and system notifications for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). Open **Usage** in a conversation header to inspect the account behind the selected model. Manage notifications and panel display under **Settings → DSH Helper**.
+**Know your usage. Catch every handoff.**
 
-The package was renamed from `dsh-assistant-suite` to **`dsh-helper`**. When upgrading, disable the old package before enabling `dsh-helper` to avoid duplicate routes. Browser preferences, balance history, and the local token ledger keep their existing storage locations.
+**DSH Helper** (`@liucxu/dsh-helper`) is a community plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). Check provider balances and quotas, track token usage and estimated costs, and receive desktop notifications for approvals, questions, completions, and failures. No npm runtime dependencies.
 
-Current settings screenshots are browser-rendered previews of the actual plugin components using sample provider data, rather than an installed-host capture. Other screenshots include earlier UI and user-provided captures; amounts illustrate the interface.
+Supports DeepSeek, Command Code, OpenRouter, Moonshot / Kimi, SiliconFlow, OpenCode Go, and compatible New API routes. Custom usage templates accept cc-switch-style configuration. Balance-history sampling currently supports Command Code; token costs are estimates, not invoices.
 
-![Dark usage panel with plan limits, credit balance, and balance history](docs/screenshots/usage-dark-desktop.png)
+## Quick start
 
+Install and enable **`@liucxu/dsh-helper`** from the DSH **Plugins** page, then reload the interface. For a CLI-managed profile:
+
+```sh
+dsh plugin --profile <profile> add @liucxu/dsh-helper
+```
+
+Open **Usage** in a conversation header; visit **Settings → DSH Helper** to test notifications and choose visible sections. Requires DSH `>=0.2.1-rc.2` and Node.js `>=18`. Running `npm install` alone does not enable a DSH plugin.
+
+**Version: `0.2.1`.** For migration from earlier plugins, see [Install or upgrade](#install-or-upgrade).
+
+[Features](#features) · [Providers](#provider-usage) · [Token costs](#token-usage-and-cost) · [Troubleshooting](#troubleshooting) · [Publishing guide](docs/PUBLISHING.md)
+
+![DSH Helper dark usage panel: provider quota, credit balance, and spending history](docs/screenshots/usage-dark-desktop.png)
+
+Amounts shown in screenshots are for illustration.
 
 ## What you can do
 
@@ -25,7 +43,7 @@ Current settings screenshots are browser-rendered previews of the actual plugin 
 | Connect another service | Select a preset or paste a cc-switch template, preview the request, test, then save. |
 | Know when a conversation needs attention | Receive approval, question, completion, and failure notifications that return to the conversation. |
 
-Install and enable **`dsh-helper`**, reload the UI, open **Usage**, then visit **Settings → DSH Helper** to test notifications and choose visible sections.
+Install and enable **`@liucxu/dsh-helper`**, reload the UI, open **Usage**, then visit **Settings → DSH Helper** to test notifications and choose visible sections.
 
 ## Features
 
@@ -51,12 +69,12 @@ Install and enable **`dsh-helper`**, reload the UI, open **Usage**, then visit *
 
 ## Install or upgrade
 
-The former package name `dsh-assistant-suite` has been replaced by `dsh-helper`. Disable the old package before enabling the renamed package to avoid duplicate routes. Browser preferences and the local token ledger remain in place.
+To migrate from `dsh-assistant-suite`, install `@liucxu/dsh-helper`. Disable the old package before enabling the renamed package to avoid duplicate routes. Browser preferences and the local token ledger remain in place.
 
-Install and enable `dsh-helper` from the DSH **Plugins** page. For a profile managed by the CLI:
+Install and enable `@liucxu/dsh-helper` from the DSH **Plugins** page. For a profile managed by the CLI:
 
 ```sh
-dsh plugin --profile <profile> add dsh-helper
+dsh plugin --profile <profile> add @liucxu/dsh-helper
 ```
 
 For a local checkout:
@@ -67,7 +85,7 @@ dsh plugin --profile <profile> add link:/absolute/path/to/dsh-helper
 
 Confirm that the bundle is enabled in the Plugins page, then reload the interface. If the host does not support hot reload, restart it. Profiles managed by the desktop application should be changed through the Plugins page. Running `npm install` only downloads the package; it does not enable the plugin in DSH.
 
-Disable the standalone `dsh-model-usage` and `dsh-reminding` plugins after enabling the suite. On the same browser profile and site origin, the suite can continue using the old plugins' refresh settings, query target, history, and notification preference. Suite-specific panel display settings use a separate storage key.
+Disable the standalone `dsh-model-usage` and `dsh-reminding` plugins before enabling DSH Helper. On the same browser profile and site origin, the suite can continue using the old plugins' refresh settings, query target, history, and notification preference. Suite-specific panel display settings use a separate storage key.
 
 ## Provider usage
 
@@ -96,7 +114,7 @@ Counts include input, output, cache-read and cache-write tokens. A final usage s
 
 The card compares estimated token cost with sampled balance spend over the trend date range and displays their difference. Balance samples can include other clients, top-ups and sampling boundary effects; token cost only covers locally recorded live events. These figures need not match. The open card refreshes periodically and follows manual usage refreshes.
 
-Renaming to `dsh-helper` preserves browser settings and `$DSH_HOME/assistant-suite/usage-ledger.json` (`DSH_ASSISTANT_LEDGER` overrides the path). Legacy daily totals remain readable; previously missed retries and cache writes cannot be recovered from aggregates. Diagnostics are off by default; `DSH_ASSISTANT_DEBUG=1` logs to the host stream instead of the installation directory.
+Renaming to `@liucxu/dsh-helper` preserves browser settings and `$DSH_HOME/assistant-suite/usage-ledger.json` (`DSH_ASSISTANT_LEDGER` overrides the path). Legacy daily totals remain readable; previously missed retries and cache writes cannot be recovered from aggregates. Diagnostics are off by default; `DSH_ASSISTANT_DEBUG=1` logs to the host stream instead of the installation directory.
 
 ![Tokens and cost card](docs/screenshots/token-cost-card.png)
 
@@ -241,7 +259,7 @@ Refresh preferences, manual query target, history, and display settings are stor
 
 ## Troubleshooting
 
-**Usage or DSH Helper settings are missing.** Confirm that `dsh-helper` is enabled and reload the interface. If the usage entry was hidden in display settings, enable it again.
+**Usage or DSH Helper settings are missing.** Confirm that `@liucxu/dsh-helper` is enabled and reload the interface. If the usage entry was hidden in display settings, enable it again.
 
 **Notifications do not appear.** Check the suite notification switch and permission, use **Test**, then check operating-system notification permissions, banners, and Do Not Disturb settings. A browser also needs an origin where notification permission can be granted.
 
@@ -249,28 +267,11 @@ Refresh preferences, manual query target, history, and display settings are stor
 
 **No history is visible.** History currently supports Command Code and needs time to collect samples. Data is not synchronized when changing browser profiles, site origins, or after clearing site data.
 
-**Duplicate usage entries or notifications appear.** Confirm only `dsh-helper` is enabled for these features, and check for other plugins with equivalent notifications.
+**Duplicate usage entries or notifications appear.** Confirm only `@liucxu/dsh-helper` is enabled for these features, and check for other plugins with equivalent notifications.
 
-## Development and publishing
+## Contributing
 
-The project has no npm runtime dependencies. Build and checks use Node.js built-in capabilities. The two feature client sources are combined into one browser entry: after editing `lib/model-usage.client.js` or `lib/reminding.client.js`, rebuild the generated `lib/client.js` instead of editing it directly.
-
-```sh
-npm run build:client   # Rebuild the combined client
-npm test               # Build, package checks, host tests, and client tests
-npm run pack:check     # Preview npm package contents
-npm run verify         # Test and check package contents
-npm pack               # Create a local .tgz package
-```
-
-Before publishing, update the version and `CHANGELOG.md`, run `npm run verify`, and review the package contents. Publish from an npm account with package access:
-
-```sh
-npm login
-npm publish
-```
-
-`publishConfig` selects the public npm registry. `prepublishOnly` runs tests, and `prepack` rebuilds the client and checks the package configuration.
+Bug reports and contributions are welcome on [GitHub](https://github.com/liuchaoxu/dsh-assistant-suite). See the [maintainer guide](docs/PUBLISHING.md) for development checks and releases, and the [brand guide](docs/BRAND.md) for the name and icon.
 
 ## License and links
 
@@ -278,4 +279,4 @@ This project is licensed under the [MIT License](LICENSE), Copyright © 2026 liu
 
 - [GitHub repository](https://github.com/liuchaoxu/dsh-assistant-suite)
 - [Report an issue](https://github.com/liuchaoxu/dsh-assistant-suite/issues)
-- [npm package](https://www.npmjs.com/package/dsh-helper)
+- [npm package](https://www.npmjs.com/package/@liucxu/dsh-helper)

@@ -1,1 +1,6 @@
-{"meta": {"title": "DSH Helper", "description": "View provider usage and get notified about approvals, questions, and finished replies."}}
+{
+  "meta": {
+    "title": "DSH Helper",
+    "description": "Provider balances, token usage and cost estimates, plus approval, question and completion notifications for DeepSeek Harness."
+  }
+}
